@@ -1,0 +1,10 @@
+{
+  "PTKPath": {
+    "PathIN": "Y:\\src\\jsonconf\\IN",
+    "PathOUT": "Y:\\src\\jsonconf\\OUT"
+  },
+  "ManagerSrv": {
+    "Addr": "127.0.0.1",
+    "Port": 8100
+  }
+}

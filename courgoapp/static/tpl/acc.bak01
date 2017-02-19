@@ -1,0 +1,111 @@
+{{define "head"}}	
+	<link rel="stylesheet" href="/static/bootstrap-table/bootstrap-table.css">	
+	<script src="/static/bootstrap-table/bootstrap-table.js"></script>
+	<script src="/static/bootstrap-table/locale/bootstrap-table-ru-RU.js"></script>
+{{end}}
+{{define "title"}}{{.Title}} {{end}}
+{{define "body"}}
+{{.Body}}
+<fieldset>
+<!-- Form Name -->
+<div class="jumbotron text-center">
+  <h1>COURIER GO</h1>
+  <p>Управление подписчиками рассылки</p> 
+</div>
+<!-- Form Name -->
+<!-- legend align="center">Управление подписчиками рассылки</legend -->
+	<div class="row">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">		 
+<button class="btn btn-danger" data-record-id="20" data-toggle="modal" data-target="#confirm-delete">        
+        Удалить запись</button>
+		</div>
+		<div class="col-md-2">
+		</div>
+	</div>
+
+<div class="row">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">
+		<button id="show" class="btn btn-default">Show checked</button>
+<table data-toggle="table"
+       data-height="460"
+       data-click-to-select="true"
+	   data-select-item-name="selectItemName"
+	   data-id-field="Id"
+	   data-pagination="true"
+	   data-page-list="[10, 25, 50, 100, ALL]"
+       data-url="/static/data/testdata02.json"
+	   data-toolbar="#show"    >
+    <thead>
+			<tr>
+                <th data-field="state" data-checkbox="true"
+                    data-formatter="stateFormatter"></th>
+                <th data-field="Id">ID</th>
+                <th data-field="Name">Ф.И.О. подписчика</th>
+                <th data-field="Dept">Отдел</th>
+				<th data-field="Mail">E-mail</th>
+            </tr>
+    </thead>   
+</table>		</div>
+		<div class="col-md-2">
+		</div>
+	</div>
+</fieldset>
+<body>
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Удаление подписчика</h4>
+                </div>
+            
+                <div class="modal-body">
+                    <p>Вы собираетесь удалить учетную запись подписчика из базы данных.</p>
+                    <p>Вы уверены что это необходимо сделать?</p>
+                    <p class="debug-url"></p>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+{{define "scripts"}}
+<script>
+    function stateFormatter(value, row, index) {
+        if (index === 10) {
+            return {
+                disabled: true
+            };
+        }
+        if (index === 3) {
+            return {
+                disabled: true,
+                checked: true
+            }
+        }
+        return value;
+    }
+	
+	var $table = $('#table');
+    $(function () {
+        $('#show').click(function () {
+            var vals = [];
+            $('input[name="selectItemName"]:checked').each(function () {
+                //index.push($(this).data('index'));			
+				vals.push($(this).val());
+            });
+            alert('Checked row index: ' + vals.join(', '));
+        });
+    });
+</script>
+
+{{end}}

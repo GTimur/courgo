@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../courgo/courgo.iml" filepath="$PROJECT_DIR$/../courgo/courgo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/courgoapp.iml" filepath="$PROJECT_DIR$/.idea/courgoapp.iml" />
+    </modules>
+  </component>
+</project>

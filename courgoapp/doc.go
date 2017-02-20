@@ -4,6 +4,20 @@ package main
 	Courier Go
 */
 
+/*
+	TO DO
+
+	- добавить редактирование настроек через webctl
+	- добавить редактирование правил через webctl
+	- добавить шифрование/дешифрование конфигурационных файлов
+	-
+
+
+*/
+
+
+
+
 /* Folders monitor
 
   MONITOR -> Monitor search rules (Monitor Search Rule ID = MSRID)

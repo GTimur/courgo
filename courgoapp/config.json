@@ -2,7 +2,7 @@
 	"JSONFile": "config.json",
 	"ManagerSrv": {
 		"Addr": "127.0.0.1",
-		"Port": 9090
+		"Port": 8000
 	},
 	"SMTPSrv": {
 		"Addr": "smtp.yandex.ru",

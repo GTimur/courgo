@@ -9,48 +9,18 @@ import (
 	"errors"
 )
 
-/*
-//Структра для описания одного экземпляра правила монитора
-type Monitor struct {
-	id         uint64   //Monitor rule id
-	folder     string
-	mask       []string
-	sid        []uint64 //subscriber id
-	msgSubject string
-	msgBody    string
-	jsonFile   string
-	action     []Action //action id
-}
-
-//Структура аккаунта подписчика для адресной книги
-type Acc struct {
-	id   uint64
-	name string
-	dept string
-	mail []string
-}
-
-type AddressBook struct {
-	JSONFile string //путь к файлу если структура будет экспортироваться в JSON
-	account  []Acc
-}
-
-
-*/
-
-//Запускает правила монитора
-func StartMonitor(rules MonitorCol, accbook AddressBook) {
+//Запускает выполнение правил монитора по всему списку
+func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) {
 	for _, r := range rules.collection {
 		fmt.Println("RULE ID =", r.id, r.mask)
-		runRule(r, accbook)
+		runRule(r, accbook, auth)
 	}
 }
-
 
 /*
    Обработка заданного правила монитора
 */
-func runRule(rule Monitor, accbook AddressBook) error {
+func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//Отображение id получателей подписки
 	id := map[uint64]bool{}
 	//Проверям существует ли путь указанный в правиле
@@ -83,12 +53,35 @@ func runRule(rule Monitor, accbook AddressBook) error {
 	fmt.Println(id)
 
 
-	//Выполнение действия согласно списка действий action
+	/*Выполнение действия согласно списка действий action
+	//Обработка кодов действий
+	//10 = отправить найденные вложения по email, с указанием subject и body в сообщении.
+	*/
 	for _, code := range rule.action {
 		//Код 10 = отправка email уведомления о поступлении файла
 		if code.id == 10 {
-
-		}
+			//создадим новое извещение
+			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
+			//вложим все найденные файлы
+			for _, file := range fl {
+				if err := msg.Attach(file); err != nil {
+					log.Println("Ошибка прикрепления файла \"", file, "\":", err)
+				}
+			}
+			//добавим всех получателей правила, для
+			//которых нашлись записи в адресной книге
+			for k := range id {
+				if !id[k] {
+					continue
+				}
+				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
+				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				fmt.Println("MSG TO", msg.To)
+			}
+			if err := SendEmailMsg(auth, msg); err != nil {
+				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
+			}
+		} /*if code.id == 10*/
 	}
 
 	return nil
@@ -101,35 +94,6 @@ func ifPathExist(path string) bool {
 	}
 	return true
 }
-
-/*
-func printFileName(path string, info os.FileInfo, err error) error {
-	if info.IsDir() {
-		return err
-	}
-	log.Println("Walk: ", path, " ", info.Name())
-	return err
-}
-
-//Просмотр вайлов в директории
-func listDir(dirpath string) {
-
-	match, err := filepath.Glob(dirpath + "/*.*")
-	// fileinfo, err := //ioutil.ReadDir(dirpath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range match {
-		//if file.IsDir() {
-		//	fmt.Println(file.Name()," <DIR>")
-		//	continue
-		//}
-		fmt.Println(file)
-	}
-	ioutil.ReadDir(dirpath)
-}
-*/
 
 //Выполняет поиск файлов в каталоге согласно списка масок
 func findFiles(dir string, mask []string) (files []string) {
@@ -168,3 +132,32 @@ func Dedup(slice []string) []string {
 
 	return result
 }
+
+/*
+func printFileName(path string, info os.FileInfo, err error) error {
+	if info.IsDir() {
+		return err
+	}
+	log.Println("Walk: ", path, " ", info.Name())
+	return err
+}
+
+//Просмотр вайлов в директории
+func listDir(dirpath string) {
+
+	match, err := filepath.Glob(dirpath + "/*.*")
+	// fileinfo, err := //ioutil.ReadDir(dirpath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range match {
+		//if file.IsDir() {
+		//	fmt.Println(file.Name()," <DIR>")
+		//	continue
+		//}
+		fmt.Println(file)
+	}
+	ioutil.ReadDir(dirpath)
+}
+*/

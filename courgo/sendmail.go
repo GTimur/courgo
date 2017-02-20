@@ -31,23 +31,8 @@ func init() {
 
 func SendEmailMsg(authCreds EmailCredentials, msg *Message) error {
 
-	// compose the message
-	msg.Subject = "Тестовое сообщение."
-	msg.Body = "Это сообщение было написано в пятницу."
+	//Зафиксируем сведения об отправителе
 	msg.From = mail.Address{Name: "COURIER GO", Address: authCreds.From}
-	msg.To = []string{"to-timur@yandex.ru"}
-
-	// add attachments
-	if err := msg.Attach("Вложение1.jpg"); err != nil {
-		log.Fatal(err)
-	}
-	if err := msg.Attach("Вложение2.pdf"); err != nil {
-		log.Fatal(err)
-	}
-	if err := msg.Attach("Вложение3.docx"); err != nil {
-		log.Fatal(err)
-	}
-
 
 	//Отправляем почту
 	auth := smtp.PlainAuth("", authCreds.Username, authCreds.Password, authCreds.Server)

@@ -43,13 +43,13 @@ func (a *AddressBook) MaxID() uint64 {
 
 //Удаляет аккаунт с заданным id
 func (a *AddressBook) RemoveAccount(id uint64) {
-	i := a.searchByID(id) //index of record by id
+	i := a.indexByID(id) //index of record by id
 	a.account = append(a.account[:i],a.account[i+1:]...)
 }
 
 //Возвращает индекс подписчика (Acc) по его id
 //если не найдено = -1
-func (a *AddressBook) searchByID(id uint64) (i int) {
+func (a *AddressBook) indexByID(id uint64) (i int) {
 	for i = 0; i < len(a.account); i++ {
 		if a.account[i].id != id {
 			continue

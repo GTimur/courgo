@@ -63,7 +63,7 @@ func main() {
 		log.Println(err.Error())
 	}
 	fmt.Println(courgo.GlobalBook.MaxID())
-	courgo.GlobalBook.RemoveAccount(10)
+	courgo.GlobalBook.RemoveAccount(20)
 	courgo.GlobalBook.RemoveAccount(21)
 	res, _ := courgo.GlobalBook.StringJSON(0)
 	fmt.Println("MAIN2:",res)
@@ -71,7 +71,7 @@ func main() {
 	var col courgo.MonitorCol
 	col.SetJSONFile("col.json")
 	courgo.ReadJSONFile(&col)
-	courgo.StartMonitor(col,courgo.GlobalBook)
+	//courgo.StartMonitor(col,courgo.GlobalBook, cfg.SMTPCred())
 
 
 	/*Запускаем сервер обслуживания "MENU"*/
@@ -83,9 +83,6 @@ func main() {
 		os.Exit(1)
 	}
 	/*MENU stop*/
-
-	msg:=courgo.NewHTMLMessage("test","test")
-	courgo.SendEmailMsg(cfg.SMTPCred(),msg)
 
 
 	//Ожидаем ввода новой строки

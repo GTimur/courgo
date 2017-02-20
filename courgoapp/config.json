@@ -1,11 +1,15 @@
 {
 	"JSONFile": "config.json",
-	"PTKPath": {
-		"PathIN": "Y:\\test\\IN",
-		"PathOUT": "Y:\\test\\OUT"
-	},
 	"ManagerSrv": {
 		"Addr": "127.0.0.1",
-		"Port": 8100
+		"Port": 9090
+	},
+	"SMTPSrv": {
+		"Addr": "smtp.yandex.ru",
+		"Port": 465,
+		"Account": "to-timur@yandex.ru",
+		"Password": "blank",
+		"From": "to-timur@yandex.ru",
+		"UseTLS": true
 	}
 }

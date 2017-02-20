@@ -4,7 +4,6 @@ package courgo
 import (
 	"os"
 	"log"
-	"io/ioutil"
 	"fmt"
 	"path/filepath"
 	"errors"
@@ -47,8 +46,10 @@ func StartMonitor(rules MonitorCol, accbook AddressBook) {
 	}
 }
 
-//Обработка заданного правила монитора
-//возвращает -1 если правило содержало ошибку
+
+/*
+   Обработка заданного правила монитора
+*/
 func runRule(rule Monitor, accbook AddressBook) error {
 	//Отображение id получателей подписки
 	id := map[uint64]bool{}
@@ -69,14 +70,26 @@ func runRule(rule Monitor, accbook AddressBook) error {
 		}
 	}
 
-	if len(id)==0{
-		return errors.New("Не найден подходящий получатель")
+	if len(id) == 0 {
+		return errors.New("Не найден подходящий для правила получатель")
 	}
 
 	//Поиск файлов согласно масок, указнных в правиле монитора
 	fl := findFiles(rule.folder, rule.mask)
+	if len(fl) == 0 {
+		return errors.New("Файлы указанные в правиле не найдены")
+	}
 	fmt.Println(fl)
 	fmt.Println(id)
+
+
+	//Выполнение действия согласно списка действий action
+	for _, code := range rule.action {
+		//Код 10 = отправка email уведомления о поступлении файла
+		if code.id == 10 {
+
+		}
+	}
 
 	return nil
 }
@@ -89,6 +102,7 @@ func ifPathExist(path string) bool {
 	return true
 }
 
+/*
 func printFileName(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return err
@@ -107,14 +121,15 @@ func listDir(dirpath string) {
 	}
 
 	for _, file := range match {
-		/*if file.IsDir() {
-			fmt.Println(file.Name()," <DIR>")
-			continue
-		}*/
+		//if file.IsDir() {
+		//	fmt.Println(file.Name()," <DIR>")
+		//	continue
+		//}
 		fmt.Println(file)
 	}
 	ioutil.ReadDir(dirpath)
 }
+*/
 
 //Выполняет поиск файлов в каталоге согласно списка масок
 func findFiles(dir string, mask []string) (files []string) {

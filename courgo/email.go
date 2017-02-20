@@ -1,25 +1,3 @@
-/*
-------=_NextPart_000_0012_01D28942.7771CFC0
-Content-Type: application/octet-stream;
-        name="6032.PDF"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-        filename="6032.PDF"
-
-JVBERi0xLjMKJeLjz9MKMSAwIG9iago8PAovQ3JlYXRvciAoWGVyb3ggV29ya0NlbnRyZSA1MjIy
-
-
-
---8e1f7336599caf92131b646ea6b8f5b9
-Content-Type: image/jpeg
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="=?UTF-8?B?0JLQu9C+0LbQtdC90LjQtTEuanB
-n?="
-
-/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB
-
-*/
-
 //Реализует отправку почтовых сообщений с вложениями
 //часть кода позаимствована у https://github.com/scorredoira
 package courgo
@@ -105,7 +83,6 @@ func newMessage(subject string, body string, bodyContentType string) *Message {
 	return m
 }
 
-
 // NewMessage returns a new Message that can compose an email with attachments
 func NewMessage(subject string, body string) *Message {
 	return newMessage(subject, body, "text/plain")
@@ -115,8 +92,6 @@ func NewMessage(subject string, body string) *Message {
 func NewHTMLMessage(subject string, body string) *Message {
 	return newMessage(subject, body, "text/html")
 }
-
-
 
 // Bytes returns the mail data
 func (m *Message) Bytes() []byte {
@@ -234,6 +209,7 @@ func SendMailTLS(host string, port uint, auth smtp.Auth, from string,to []string
 
 	conn, err := tls.Dial("tcp", serverAddr, nil)
 	if err != nil {
+		log.Println("Error Dialing", serverAddr)
 		log.Println("Error Dialing", err)
 		return err
 	}

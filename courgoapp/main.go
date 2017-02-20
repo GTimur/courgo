@@ -12,6 +12,16 @@ import (
 func main() {
 	var book courgo.AddressBook = courgo.AddressBook{}
 	var web courgo.WebCtl
+
+
+	//Экземпляр структуры для хранения настроек программы
+	cfg := courgo.Config{}
+	cfg.SetJSONFile("config.json")
+	cfg.SetManagerSrv("127.0.0.1",9090)
+	cfg.SetSMTPSrv("smtp.yandex.ru",465,"to-timur@yandex.ru","blank","to-timur@yandex.ru",true)
+	//cfg.WriteJSON()
+	cfg.ReadJSON()
+
 	//Экземпляры мониторов
 	var mon courgo.Monitor
 	var mons []courgo.Monitor = []courgo.Monitor{}
@@ -37,16 +47,6 @@ func main() {
 	//courgo.WriteJSONFile(&mons[0])
 	//courgo.ReadJSONFile(&mons[0])
 
-
-	//Экземпляр структуры для хранения настроек программы
-	cfg := courgo.Config{"test", courgo.PTKPSD{PathIN:"Y:\\test\\IN", PathOUT:"Y:\\test\\OUT"}, courgo.ManagerSrv{Addr:"127.0.0.1", Port:9090}, }
-
-	cfg.JSONFile = "config.json"
-	cfg.ReadJSON()
-	//cfg.JSONFile = "config.bak"
-	//cfg.NewConfig()
-	//cfg.WriteJSON()
-	//fmt.Println(cfg.PTKPath,cfg.ManagerSrv)
 
 	//book.Add(account)
 	//book.Add(account1)
@@ -75,8 +75,8 @@ func main() {
 
 
 	/*Запускаем сервер обслуживания "MENU"*/
-	web.SetHost(net.ParseIP("127.0.0.1"))
-	web.SetPort(8000)
+	web.SetHost(net.ParseIP(cfg.ManagerSrvAddr()))
+	web.SetPort(cfg.ManagerSrvPort())
 	err := web.StartServe()
 	if err!=nil{
 		log.Println(err)
@@ -84,7 +84,8 @@ func main() {
 	}
 	/*MENU stop*/
 
-	courgo.SendEmailMsg()
+	msg:=courgo.NewHTMLMessage("test","test")
+	courgo.SendEmailMsg(cfg.SMTPCred(),msg)
 
 
 	//Ожидаем ввода новой строки

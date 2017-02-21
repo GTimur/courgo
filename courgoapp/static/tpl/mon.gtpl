@@ -16,10 +16,10 @@
 <!-- Form Name -->
 <div class="jumbotron text-center">
   <h1>COURIER GO</h1>
-  <p>Управление подписчиками рассылки</p> 
+  <p>Управление правилами монитора</p> 
 </div>
 <!-- Form Name -->
-<!-- legend align="center">Управление подписчиками рассылки</legend -->
+<!-- legend align="center">Управление правилами монитора</legend -->
 	<div class="row">
 		<div class="col-md-2">
 		</div>
@@ -76,7 +76,7 @@
                 </div>
             
                 <div class="modal-body">
-                    <p>Вы собираетесь удалить учетную запись подписчика из базы данных.</p>					
+                    <p>Вы собираетесь удалить правило из базы данных.</p>					
 					<p>К удалению:</p>
 					<div id="userid"></div>
 					<p><br>Вы уверены что это необходимо сделать?</p>
@@ -109,7 +109,7 @@ $('#btnremove').prop('disabled', true);
 			// handle AJAX redirection
 			if (JSON.parse(data) == "register") {
 				//alert("REG: "+data);
-				window.location = '/acc/register';
+				window.location = '/acc/mon';
 			}		
         }		
     });	
@@ -160,7 +160,7 @@ $('#btnremove').prop('disabled', true);
 			// handle AJAX redirection
 			if (JSON.parse(data) == "register") {
 				//alert("REG: "+data);
-				//window.location = '/acc/register';
+				//window.location = '/acc/mon';
 			}		
         }		
     });	

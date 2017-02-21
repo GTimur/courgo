@@ -59,14 +59,14 @@ func main() {
 	//res, _ := book.StringJSON(0)
 	//fmt.Println("MAIN:",res)
 
-	if err:=courgo.InitGlobalBook("test.book"); err !=nil{
+	if err:=courgo.InitGlobalBook("./static/data/test.book"); err !=nil{
 		log.Println(err.Error())
 	}
-	fmt.Println(courgo.GlobalBook.MaxID())
-	courgo.GlobalBook.RemoveAccount(20)
-	courgo.GlobalBook.RemoveAccount(21)
-	res, _ := courgo.GlobalBook.StringJSON(0)
-	fmt.Println("MAIN2:",res)
+	//fmt.Println(courgo.GlobalBook.MaxID())
+	//courgo.GlobalBook.RemoveAccount(20)
+	//courgo.GlobalBook.RemoveAccount(21)
+	//res, _ := courgo.GlobalBook.StringJSON(0)
+	//fmt.Println("MAIN2:",res)
 
 	var col courgo.MonitorCol
 	col.SetJSONFile("col.json")

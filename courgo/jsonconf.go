@@ -113,7 +113,6 @@ func (c *Config) SMTPSrvUseTLS() bool {
 	return c.smtpSrv.UseTLS
 }
 
-
 //Создает новый файл для записи конфигурации JSON если
 //таковой отсутствует (не перезаписывает его)
 func (c *Config) MakeConfig() (err error) {
@@ -147,6 +146,7 @@ func (c *Config) readJSON() (err error) {
 		log.Fatalf("Ошибка чтения JSON файла конфигурации: %v\n", err)
 		return err
 	}
+
 	//Готовим для импорта структуру JSON
 	var jsonConfig configJSON
 

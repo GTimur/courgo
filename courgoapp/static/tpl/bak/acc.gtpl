@@ -6,12 +6,6 @@
 {{define "title"}}{{.Title}} {{end}}
 {{define "body"}}
 {{.Body}}
-<nav class="navbar navbar-default">
-  <ul class="nav navbar-nav">
-    <li><a href="{{.LnkHome}}">COURIER GO</a></li>
-  </ul>
-  <p class="navbar-text"></p>
-</nav>
 <fieldset>
 <!-- Form Name -->
 <div class="jumbotron text-center">
@@ -24,35 +18,35 @@
 		<div class="col-md-2">
 		</div>
 		<div class="col-md-8">		 
-		<div id="toolbar">
          <button id="btnremove" class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">
 		 Удалить</button>
-		 <button id="btnadd" class="btn btn-default" >
-         Добавить</button>
-		 </div>
+		 <button id="btnadd" class="btn btn-default">
+         Создать</button>
 		</div>
 		<div class="col-md-2">
 		</div>
 	</div>
+
 <div class="row">
 		<div class="col-md-2">
 		</div>
-		<div class="col-md-8">		
+		<div class="col-md-8">
+		<button id="show" class="btn btn-default">Show checked</button>		
 		<table id="table"
-		data-toggle="table"		
+		data-toggle="table"
        data-height="460"
-	   data-toolbar="#toolbar"
        data-click-to-select="true"
 	   data-select-item-name="selectItemName"
 	   data-id-field="Id"
 	   data-pagination="true"   
 	   data-page-list="[10, 25, 50, 100, ALL]"
-       data-url="/static/data/test.book"	   
+       data-url="/static/data/testdata02.json"
+	   data-toolbar="#show"
 	   data-method="post"   
        data-single-select="true"
        data-content-type="application/x-www-form-urlencoded">
     <thead>
-        	<tr>
+			<tr>
                 <th data-field="state" data-checkbox="true"></th>
                 <th data-field="Id">ID</th>
                 <th data-field="Name">Ф.И.О. подписчика</th>
@@ -94,27 +88,6 @@
 {{define "scripts"}}
 <script>
 $('#btnremove').prop('disabled', true);
-/*Register new account*/
- $('#btnadd').click(function () {
-	//Handshake function for JSON request!    
-    $.ajax({                 /* start ajax function to send data */
-        url: "/acc",
-        type: 'POST',
-        datatype: 'json',
-        contentType: 'application/json; charset=UTF-8',        
-        error: function () { alert("handshake didn't go through") }, /* call disconnect function */
-        data: JSON.stringify(["NewAcc"]),
-        success: function (data) {
-			//alert("SUCCESS: "+JSON.parse(data));
-			// handle AJAX redirection
-			if (JSON.parse(data) == "register") {
-				//alert("REG: "+data);
-				window.location = '/acc/register';
-			}		
-        }		
-    });	
- });
-
 //<input type="text" name="userId" id="userid" value=""/>
 	var $table = $('#table');
     $(function () {
@@ -170,6 +143,7 @@ $('#btnremove').prop('disabled', true);
    });
    
 /*Delete confirmation*/
+ 
  $('#confirm-delete').on('click', '.btn-ok', function(e) {
   var $modalDiv = $(e.delegateTarget);
   $modalDiv.addClass('loading');
@@ -204,7 +178,7 @@ $('#table').bootstrapTable({
 		console.log("uncheck");
     }
 });
-
+   
 </script>
 
 {{end}}

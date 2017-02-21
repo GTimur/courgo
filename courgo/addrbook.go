@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"errors"
 )
 
 //Адресная книга содержит все аккаунты пользователей-подписчиков
@@ -28,6 +29,23 @@ func InitGlobalBook(jsonfile string) (err error) {
 	return err
 }
 
+//Добавляет аккаунт в книгу подписчиков
+func RegisterAccount(name, dept string, mail []string) error {
+	if len(name) <= 3 || len(dept) <= 3 || len(mail[0]) <= 3 {
+		return errors.New("Поля незаполнены либо содержат ошибки!")
+	}
+	account := Acc{
+		id:GlobalBook.MaxID() + 1,
+		name:name,
+		dept:dept,
+		mail:mail,
+	}
+
+	GlobalBook.Add(account)
+
+	return nil
+}
+
 
 //Возвращает наибольший номер id для account
 func (a *AddressBook) MaxID() uint64 {
@@ -44,7 +62,7 @@ func (a *AddressBook) MaxID() uint64 {
 //Удаляет аккаунт с заданным id
 func (a *AddressBook) RemoveAccount(id uint64) {
 	i := a.indexByID(id) //index of record by id
-	a.account = append(a.account[:i],a.account[i+1:]...)
+	a.account = append(a.account[:i], a.account[i + 1:]...)
 }
 
 //Возвращает индекс подписчика (Acc) по его id
@@ -108,7 +126,7 @@ func (a *AddressBook) dumpJSON(id uint64) (*bytes.Buffer, error) {
 	buffer := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buffer)
 	encoder.SetIndent("", "\t")
-	err := encoder.Encode(&JSONBook)
+	err := encoder.Encode(&JSONBook.Account)
 	if err != nil {
 		log.Println(err)
 		return buffer, err
@@ -181,7 +199,7 @@ func (a *AddressBook) readJSON() (error) {
 
 	//Буфер для записи строки результата удовлетворяет io.Reader
 	decoder := json.NewDecoder(bytes.NewReader(buffer))
-	err = decoder.Decode(&JSONBook)
+	err = decoder.Decode(&JSONBook.Account)
 	if err != nil {
 		log.Println(err)
 		return err

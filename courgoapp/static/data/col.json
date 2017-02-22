@@ -1,9 +1,6 @@
-{
-	"JSONFile": "col.json",
-	"Collection": [
+[
 		{
 			"Id": 99,
-			"Desc":"Правило 99",
 			"Folder": "Y:\\tmp",
 			"Mask": [
 				"0z*.*",
@@ -25,7 +22,6 @@
 		},
 		{
 			"Id": 100,
-			"Desc":"Правило 100",
 			"Folder": "Y:\\tmp1",
 			"Mask": [
 				"*test*.*",
@@ -44,6 +40,5 @@
 					"Desc": "Send email"
 				}
 			]
-		}
-	]
-}
+		}	
+]

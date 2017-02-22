@@ -47,7 +47,7 @@
 	   data-id-field="Id"
 	   data-pagination="true"   
 	   data-page-list="[10, 25, 50, 100, ALL]"
-       data-url="/static/data/test.book"	   
+       data-url="/gen/data/moncol.json"	   
 	   data-method="post"   
        data-single-select="true"
        data-content-type="application/x-www-form-urlencoded">
@@ -55,9 +55,9 @@
         	<tr>
                 <th data-field="state" data-checkbox="true"></th>
                 <th data-field="Id">ID</th>
-                <th data-field="Name">Ф.И.О. подписчика</th>
-                <th data-field="Dept">Отдел</th>
-				<th data-field="Mail">E-mail</th>
+                <th data-field="Desc">Описание</th>
+                <th data-field="Folder">Папка</th>
+				<th data-field="Mask">Маска</th>
             </tr>
     </thead>   
 </table>		</div>

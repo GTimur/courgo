@@ -20,8 +20,8 @@ type WebCtl struct {
 }
 
 type Page struct {
-	Title string
-	Body  template.HTML
+	Title   string
+	Body    template.HTML
 	LnkHome string
 }
 
@@ -68,6 +68,8 @@ func (w *WebCtl) StartServe() (err error) {
 	// для отдачи сервером статичных файлов из папки public/static
 	fs := http.FileServer(http.Dir("./static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/gen/data/test.book", accbook) //Генерация JSON с данными подписчиков для таблицы
+	http.HandleFunc("/gen/data/moncol.json", moncol) //Генерация JSON с данными правил монитора
 	http.HandleFunc("/", urlhome) //Каждый запрос вызывает обработчик
 	http.HandleFunc("/acc", urlacc) //Страница с таблицей подписчиков
 	http.HandleFunc("/acc/register", urlregister) //Страница регистрации подписчика
@@ -91,6 +93,30 @@ func urlhome(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//Обработчик запросов для /gen/data/test.book
+//Генерирует содержимое адресной книги в формате JSON для передачи в таблицу
+//моделирует работу с файлом для таблицы
+func accbook(w http.ResponseWriter, r *http.Request) {
+	data := ""
+	var err error
+	if data, err = GlobalBook.StringJSON(0); err != nil {
+		data = ""
+	}
+	fmt.Fprint(w, data)
+}
+
+// Обработчик запросов для /gen/data/moncol.json
+// Генерирует в формате JSON имеющиеся правила монитора
+// для передачи в таблицу
+func moncol(w http.ResponseWriter, r *http.Request) {
+	data := ""
+	var err error
+	if data, err = GlobalMonCol.StringJSON(); err != nil {
+		data = ""
+	}
+	fmt.Fprint(w, data)
+}
+
 //обработчик для /acc/register
 func urlregister(w http.ResponseWriter, r *http.Request) {
 	//var accnt Acc
@@ -98,7 +124,7 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 	title := "Регистрация подписчика"
 	body := ""
 	lnkhome := "http://127.0.0.1:8000"
-	page := Page{title, template.HTML(body),lnkhome}
+	page := Page{title, template.HTML(body), lnkhome}
 	if r.Method == "GET" {
 		if err := register_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -135,8 +161,8 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 			switch jh["post"] {
 			case "SaveButton" :
 
-				if err:=RegisterAccount(jh["fio"],jh["dept"],strings.Split(jh["email"], ","));err!=nil{
-					log.Println("Ошибка регистрации подписчика:",err)
+				if err := RegisterAccount(jh["fio"], jh["dept"], strings.Split(jh["email"], ",")); err != nil {
+					log.Println("Ошибка регистрации подписчика:", err)
 					enc := json.NewEncoder(w)
 					enc.Encode("SaveNotOk")
 				} else {
@@ -144,7 +170,7 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 						log.Println("Не удалось сохранить в файл нового подписчика:", err)
 						enc := json.NewEncoder(w)
 						enc.Encode("SaveNotOk")
-					}else{
+					} else {
 						enc := json.NewEncoder(w)
 						enc.Encode("SaveOk")
 					}
@@ -170,8 +196,8 @@ func urlacc(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("method:", r.Method) //get request method
 	title := "Подписчики рассылки (адресная книга)"
 	body := ""
-	lnkhome:="http://127.0.0.1:8000"
-	page := Page{title, template.HTML(body),lnkhome}
+	lnkhome := "http://127.0.0.1:8000"
+	page := Page{title, template.HTML(body), lnkhome}
 	if r.Method == "GET" {
 		if err := acc_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -226,8 +252,8 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("method:", r.Method) //get request method
 	title := "Управление правилами монитора"
 	body := ""
-	lnkhome:="http://127.0.0.1:8000"
-	page := Page{title, template.HTML(body),lnkhome}
+	lnkhome := "http://127.0.0.1:8000"
+	page := Page{title, template.HTML(body), lnkhome}
 	if r.Method == "GET" {
 		if err := monitor_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)

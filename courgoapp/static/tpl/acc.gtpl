@@ -47,7 +47,7 @@
 	   data-id-field="Id"
 	   data-pagination="true"   
 	   data-page-list="[10, 25, 50, 100, ALL]"
-       data-url="/static/data/test.book"	   
+       data-url="/gen/data/test.book"	   
 	   data-method="post"   
        data-single-select="true"
        data-content-type="application/x-www-form-urlencoded">

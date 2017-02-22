@@ -26,6 +26,9 @@ import (
 
 */
 
+//Коллекция для хранения правил монитора
+var GlobalMonCol MonitorCol
+
 //Структура для коллекции всех активных мониторов
 type MonitorCol struct {
 	jsonFile   string
@@ -41,6 +44,7 @@ type monitorColJSON struct {
 //Структра для описания одного экземпляра правила монитора
 type Monitor struct {
 	id         uint64   //Monitor rule id
+	desc       string
 	folder     string
 	mask       []string
 	sid        []uint64 //subscriber id
@@ -53,6 +57,7 @@ type Monitor struct {
 //Аналог Monitor для конвертации из/в JSON
 type monitorJSON struct {
 	Id         uint64
+	Desc       string
 	Folder     string
 	Mask       []string
 	Sid        []uint64 //subscriber id
@@ -69,7 +74,7 @@ func (m *MonitorCol) SetCollection(collection []Monitor) {
 }
 
 func (m *MonitorCol) SetJSONFile(jsonfile string) {
-	m.jsonFile=jsonfile
+	m.jsonFile = jsonfile
 }
 
 //Структура для описания одного действия
@@ -86,6 +91,10 @@ type actionJSON struct {
 
 func (m *Monitor) SetId(id uint64) {
 	m.id = id
+}
+
+func (m *Monitor) SetDesc(desc string) {
+	m.desc = desc
 }
 
 func (m *Monitor) SetFolder(folder string) {
@@ -153,6 +162,7 @@ func (m *Monitor) monToMonJSON() monitorJSON {
 	var mon monitorJSON
 
 	mon.JSONFile = m.jsonFile
+	mon.Desc = m.desc
 	mon.Folder = m.folder
 	mon.Mask = m.mask
 	mon.MsgSubject = m.msgSubject
@@ -171,6 +181,7 @@ func (m *monitorJSON) monJSONToMon() Monitor {
 	var mon Monitor
 
 	mon.jsonFile = m.JSONFile
+	mon.desc = m.Desc
 	mon.folder = m.Folder
 	mon.mask = m.Mask
 	mon.msgSubject = m.MsgSubject
@@ -193,8 +204,10 @@ func (m *MonitorCol) dumpJSON() (*bytes.Buffer, error) {
 
 	for _, elem := range m.collection {
 		col.Collection = append(col.Collection, elem.monToMonJSON())
+
 	}
-	col.JSONFile=m.jsonFile
+	col.JSONFile = m.jsonFile
+
 
 	//Буфер для записи строки результата
 	//удовлетворяет io.Writer
@@ -227,7 +240,7 @@ func (m *MonitorCol) readJSON() (err error) {
 		fmt.Errorf("JSON decoder error: %v", err)
 	}
 	//Копируем данные JSON структуры в m
-	for _, elem := range col.Collection{
+	for _, elem := range col.Collection {
 		m.collection = append(m.collection, elem.monJSONToMon())
 	}
 
@@ -250,6 +263,25 @@ func (m *MonitorCol) writeJSON() (err error) {
 	return err
 }
 
+// Выполняет возврат JSON только для collection
+func (m *MonitorCol) StringJSON() (string, error) {
+	var col []monitorJSON
+	//Копируем данные JSON структуры в m
+	for _, elem := range m.collection {
+		col = append(col, elem.monToMonJSON())
+	}
+	//Буфер для записи строки результата
+	//удовлетворяет io.Writer
+	buffer := bytes.NewBufferString("")
+	encoder := json.NewEncoder(buffer)
+	encoder.SetIndent("", "\t")
+	err := encoder.Encode(&col)
+	if err != nil {
+		log.Println(err)
+		return buffer.String(), err
+	}
+	return buffer.String(), err
+}
 
 //Создает новый файл для записи конфигурации JSON если
 //таковой отсутствует (не перезаписывает его)
@@ -286,6 +318,7 @@ func (m *Monitor) dumpJSON() (*bytes.Buffer, error) {
 	}
 
 	mon.JSONFile = m.jsonFile
+	mon.Desc = m.desc
 	mon.Folder = m.folder
 	mon.Mask = m.mask
 	mon.MsgSubject = m.msgSubject
@@ -335,6 +368,7 @@ func (m *Monitor) readJSON() (err error) {
 	}
 
 	m.folder = mon.Folder
+	m.desc = mon.Desc
 	m.mask = mon.Mask
 	m.msgSubject = mon.MsgSubject
 	m.msgBody = mon.MsgBody

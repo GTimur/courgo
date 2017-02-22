@@ -9,6 +9,7 @@ import (
 	"log"
 )
 
+
 func main() {
 	var book courgo.AddressBook = courgo.AddressBook{}
 	var web courgo.WebCtl
@@ -59,7 +60,7 @@ func main() {
 	//res, _ := book.StringJSON(0)
 	//fmt.Println("MAIN:",res)
 
-	if err:=courgo.InitGlobalBook("./static/data/test.book"); err !=nil{
+	if err:=courgo.InitGlobalBook("./static/data/test1.book"); err !=nil{
 		log.Println(err.Error())
 	}
 	//fmt.Println(courgo.GlobalBook.MaxID())
@@ -68,9 +69,10 @@ func main() {
 	//res, _ := courgo.GlobalBook.StringJSON(0)
 	//fmt.Println("MAIN2:",res)
 
-	var col courgo.MonitorCol
-	col.SetJSONFile("col.json")
-	courgo.ReadJSONFile(&col)
+
+	courgo.GlobalMonCol.SetJSONFile("col.json")
+	//courgo.WriteJSONFile(&courgo.GlobalMonCol)
+	courgo.ReadJSONFile(&courgo.GlobalMonCol)
 	//courgo.StartMonitor(col,courgo.GlobalBook, cfg.SMTPCred())
 
 

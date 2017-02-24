@@ -39,6 +39,7 @@
 		</div>
 		<div class="col-md-8">		
 		<table id="table"
+		class="table table-striped"
 		data-toggle="table"		
        data-height="460"
 	   data-toolbar="#toolbar"
@@ -57,7 +58,8 @@
                 <th data-field="Id">ID</th>
                 <th data-field="Desc">Описание</th>
                 <th data-field="Folder">Папка</th>
-				<th data-field="Mask">Маска</th>
+				<th data-field="Mask" data-formatter="arrayStringFormatter">Маска</th>
+				<th data-field="Action" data-formatter="actionStringFormatter">Действия</th>
             </tr>
     </thead>   
 </table>		</div>
@@ -98,7 +100,7 @@ $('#btnremove').prop('disabled', true);
  $('#btnadd').click(function () {
 	//Handshake function for JSON request!    
     $.ajax({                 /* start ajax function to send data */
-        url: "/acc",
+        url: "/mon",
         type: 'POST',
         datatype: 'json',
         contentType: 'application/json; charset=UTF-8',        
@@ -109,7 +111,7 @@ $('#btnremove').prop('disabled', true);
 			// handle AJAX redirection
 			if (JSON.parse(data) == "register") {
 				//alert("REG: "+data);
-				window.location = '/acc/mon';
+				window.location = '/mon/register';
 			}		
         }		
     });	
@@ -168,7 +170,39 @@ $('#btnremove').prop('disabled', true);
         alert('Checked row index: ' + jsonstring);
     });
    });
-   
+
+// Handle string array json fields [{},{}]
+function arrayStringFormatter(value) {
+    var Field = '';
+
+    // Loop through the authors object
+    for (var index = 0; index < value.length; index++) {
+        Field += value[index];
+
+        // Only show a comma if it's not the last one in the loop
+        if (index < (value.length - 1)) {
+            Field += ',<br>';
+        }
+    }
+    return Field;
+}   
+
+// Handle string array json fields Action [{A,B},{A,B}]
+function actionStringFormatter(value) {
+    var Field = '';
+
+    // Loop through the authors object
+    for (var index = 0; index < value.length; index++) {
+        Field += value[index].Desc;
+
+        // Only show a comma if it's not the last one in the loop
+        if (index < (value.length - 1)) {
+            Field += ',<br>';
+        }
+    }
+    return Field;
+}  
+
 /*Delete confirmation*/
  $('#confirm-delete').on('click', '.btn-ok', function(e) {
   var $modalDiv = $(e.delegateTarget);
@@ -206,5 +240,4 @@ $('#table').bootstrapTable({
 });
 
 </script>
-
 {{end}}

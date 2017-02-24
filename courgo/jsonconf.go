@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"log"
+	"errors"
 )
 
 type Config struct {
@@ -15,6 +16,10 @@ type Config struct {
 	managerSrv managerSrv
 	smtpSrv    srvSMTP
 }
+
+//Глобальная переменная для хранения настроек
+var GlobalConfig Config = Config{};
+const GlobalConfigFile = "config.json"
 
 type configJSON struct {
 	JSONFile   string //путь к файлу если структура будет экспортироваться в JSON
@@ -219,5 +224,46 @@ func WriteJSONFile(data readerWriterJSON) error {
 	err := data.writeJSON()
 	return err
 }
+
+// Инициализация переменной Config и проверка
+// параметров на ошибки
+func (c *Config) ConfigInit(jsonfile string, webaddr string, webport uint16, smtpaddr string,
+smtpport uint, user string, passwd string, emailfrom string, usetls bool) (err error) {
+
+	if len(jsonfile) < 1 {
+		return errors.New("ConfigInit:Имя jsonfile слишком короткое.")
+	}
+	if len(webaddr) < 1 {
+		return errors.New("ConfigInit:Адрес webaddr указан неверно.")
+	}
+	if webport <= 1024 {
+		return errors.New("ConfigInit:Порт webport должен быть в пределах 1025-65535.")
+	}
+	if len(smtpaddr) < 1 {
+		return errors.New("ConfigInit:Адрес smtpaddr указан неверно.")
+	}
+	if smtpport <= 1 {
+		return errors.New("ConfigInit:Порт smtpport указан неверно.")
+	}
+	if len(user) < 1 {
+		return errors.New("ConfigInit:Email адрес от имени которого ведется рассылка заполнен неверно.")
+	}
+	if len(emailfrom) == 0 {
+		return errors.New("ConfigInit:Адрес emailfrom не может быть пустым.")
+	}
+
+	c.jsonFile = jsonfile
+	c.managerSrv.Addr = webaddr
+	c.managerSrv.Port = webport
+	c.smtpSrv.Addr = smtpaddr
+	c.smtpSrv.Port = smtpport
+	c.smtpSrv.Account = user
+	c.smtpSrv.Password = passwd
+	c.smtpSrv.From = emailfrom
+	c.smtpSrv.UseTLS = usetls
+
+	return nil
+}
+
 
 //configrw := Config{PTKPSD{PathIN:"Y:\\test\\IN",PathOUT:"Y:\\test\\OUT"},managersrv{Addr:"127.0.0.1",Port:9090},}

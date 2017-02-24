@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 	"encoding/json"
+	"strconv"
 )
 
 type WebCtl struct {
@@ -27,10 +28,12 @@ type Page struct {
 
 var (
 	// компилируем шаблоны
+	conf_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "config.gtpl")))
 	home_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "index.gtpl")))
 	acc_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "acc.gtpl")))
 	register_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "register.gtpl")))
-	monitor_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "mon.gtpl")))
+	mon_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "mon.gtpl")))
+	monreg_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "monreg.gtpl")))
 )
 
 
@@ -74,6 +77,8 @@ func (w *WebCtl) StartServe() (err error) {
 	http.HandleFunc("/acc", urlacc) //Страница с таблицей подписчиков
 	http.HandleFunc("/acc/register", urlregister) //Страница регистрации подписчика
 	http.HandleFunc("/mon", urlmon) //Страница с таблицей правил монитора
+	http.HandleFunc("/mon/register", urlmonreg) //Страница создания правила монитора
+	http.HandleFunc("/config", urlconfig) //Страница настройки приложения
 	go func() {
 		log.Fatal(manners.ListenAndServe(w.connString(), http.DefaultServeMux))
 	}()
@@ -158,6 +163,8 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 			}
 			//log.Println(jh["fio"],jh["dept"],strings.Split(jh["email"], ","))
 
+
+			//JSONheader
 			switch jh["post"] {
 			case "SaveButton" :
 
@@ -248,14 +255,12 @@ func urlacc(w http.ResponseWriter, r *http.Request) {
 //Обработчик для /mon
 //Если в POST передан нужный код, то выполняется действие
 func urlmon(w http.ResponseWriter, r *http.Request) {
-	//var accnt Acc
-	//fmt.Println("method:", r.Method) //get request method
 	title := "Управление правилами монитора"
 	body := ""
 	lnkhome := "http://127.0.0.1:8000"
 	page := Page{title, template.HTML(body), lnkhome}
 	if r.Method == "GET" {
-		if err := monitor_template.ExecuteTemplate(w, "main", page); err != nil {
+		if err := mon_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
 			http.Error(w, http.StatusText(500), 500)
 		}
@@ -289,6 +294,128 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 			//для предотвращения ошибки JSON parse error в ajax методе
 			enc := json.NewEncoder(w)
 			enc.Encode("No action requested.")
+		}
+	}
+}
+
+//Обработчик для /mon/register
+//Если в POST передан нужный код, то выполняется действие
+func urlmonreg(w http.ResponseWriter, r *http.Request) {
+	title := "Управление правилами монитора"
+	body := ""
+	lnkhome := "http://127.0.0.1:8000"
+	page := Page{title, template.HTML(body), lnkhome}
+	if r.Method == "GET" {
+		if err := monreg_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}
+	} else {
+		log.Println("POST")
+		dec := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		// Массив данных JSON для получения данных из формы (ajax)
+		// Первый элемент должен содержать код действия
+		type jsonPOSTData []string
+
+		var jh jsonPOSTData
+
+		err := dec.Decode(&jh)
+		if err != nil {
+			log.Println("Handshake error: ", err)
+		}
+		log.Println(jh[0])
+
+		switch jh[0] {
+		case "RemoveAcc" :
+			enc := json.NewEncoder(w)
+			enc.Encode("remove")
+		case "NewAcc" :
+			enc := json.NewEncoder(w)
+			enc.Encode("register")
+		//http.Redirect(w, r, "/", http.StatusFound)
+		default:
+			//Отправляем ответ на POST-запрос
+			//для предотвращения ошибки JSON parse error в ajax методе
+			enc := json.NewEncoder(w)
+			enc.Encode("No action requested.")
+		}
+	}
+}
+
+//обработчик для /config
+func urlconfig(w http.ResponseWriter, r *http.Request) {
+	//var accnt Acc
+	//fmt.Println("method:", r.Method) //get request method
+	title := "Настройка основных параметров"
+	body := ""
+	lnkhome := "http://127.0.0.1:8000"
+	page := Page{title, template.HTML(body), lnkhome}
+	if r.Method == "GET" {
+		if err := conf_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}
+	} else {
+		log.Println("POST")
+		dec := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		// Массив данных JSON для получения данных из формы (ajax)
+		// Первый элемент должен содержать код действия:
+		type jsonPOSTData map[string]string
+
+		var jh jsonPOSTData
+
+		err := dec.Decode(&jh)
+		if err != nil {
+			log.Println("Handshake error: ", err)
+		}
+
+		//JSONheader
+		switch jh["post"] {
+		case "SaveConfig" :
+			var webport, smtpport int
+			var strerr error
+			if webport, strerr = strconv.Atoi(jh["web-port"]); err != nil {
+				enc := json.NewEncoder(w)
+				enc.Encode(strerr.Error())
+				break
+			}
+
+			if smtpport, strerr = strconv.Atoi(jh["smtp-port"]); err != nil {
+				enc := json.NewEncoder(w)
+				enc.Encode(strerr.Error())
+				break
+			}
+			//Заполним глобальный конфиг данными из формы
+			if err := GlobalConfig.ConfigInit(GlobalConfigFile, jh["web-addr"], uint16(webport), jh["smtp-addr"], uint(smtpport),
+				jh["from-email"], jh["smtp-login"], jh["smtp-password"], strings.Contains(jh["use-tls"], "useTLS")); err != nil {
+				enc := json.NewEncoder(w)
+				enc.Encode(err.Error())
+				break
+			}
+			//Обнулим или создадим файл конфигурации
+			if err := GlobalConfig.NewConfig(); err != nil {
+				enc := json.NewEncoder(w)
+				enc.Encode(err.Error())
+				break
+			}
+			//Запишем данные формы в новый файл конфигурации
+			if err := WriteJSONFile(&GlobalConfig); err != nil {
+				enc := json.NewEncoder(w)
+				enc.Encode(err.Error())
+				break
+			}
+			enc := json.NewEncoder(w)
+			enc.Encode("SaveOK")
+
+		default:
+			//Отправляем ответ на POST-запрос
+			//для предотвращения ошибки JSON parse error в ajax методе
+			enc := json.NewEncoder(w)
+			enc.Encode("/config - no actions required")
 		}
 	}
 }

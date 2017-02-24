@@ -8,8 +8,8 @@
 		"Addr": "smtp.yandex.ru",
 		"Port": 465,
 		"Account": "to-timur@yandex.ru",
-		"Password": "to-timur@yandex.ru",
-		"From": "password",
+		"Password": "blank",
+		"From": "to-timur@yandex.ru",
 		"UseTLS": true
 	}
 }

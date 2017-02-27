@@ -78,6 +78,7 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
 				fmt.Println("MSG TO", msg.To)
 			}
+			// Отправим сообщение
 			if err := SendEmailMsg(auth, msg); err != nil {
 				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
 			}
@@ -106,7 +107,6 @@ func findFiles(dir string, mask []string) (files []string) {
 			log.Println("findFiles error: ", err)
 			return nil
 		}
-
 		files = append(files, list...)
 
 	}

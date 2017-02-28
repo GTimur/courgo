@@ -60,9 +60,15 @@ func main() {
 	//res, _ := book.StringJSON(0)
 	//fmt.Println("MAIN:",res)
 
+/*
 	if err:=courgo.InitGlobalBook("./static/data/test1.book"); err !=nil{
 		log.Println(err.Error())
 	}
+*/
+	if err:=courgo.InitGlobalBook("test.book"); err !=nil{
+		log.Println(err.Error())
+	}
+
 	//fmt.Println(courgo.GlobalBook.MaxID())
 	//courgo.GlobalBook.RemoveAccount(20)
 	//courgo.GlobalBook.RemoveAccount(21)
@@ -73,7 +79,8 @@ func main() {
 	courgo.GlobalMonCol.SetJSONFile("col.json")
 	//courgo.WriteJSONFile(&courgo.GlobalMonCol)
 	courgo.ReadJSONFile(&courgo.GlobalMonCol)
-	//courgo.StartMonitor(col,courgo.GlobalBook, cfg.SMTPCred())
+	courgo.GlobalHist.SetFilename("history.dat")
+	courgo.StartMonitor(courgo.GlobalMonCol,courgo.GlobalBook, cfg.SMTPCred())
 
 
 	/*Запускаем сервер обслуживания "MENU"*/

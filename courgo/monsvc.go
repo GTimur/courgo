@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"errors"
+	"time"
 )
 
 //Запускает выполнение правил монитора по всему списку
@@ -15,6 +16,7 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) 
 		fmt.Println("RULE ID =", r.id, r.mask)
 		runRule(r, accbook, auth)
 	}
+	fmt.Println("StartMonitor: DONE.")
 }
 
 /*
@@ -22,7 +24,7 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) 
 */
 func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//Отображение id получателей подписки
-	id := map[uint64]bool{}
+	uid := map[uint64]bool{}
 	//Проверям существует ли путь указанный в правиле
 	if !ifPathExist(rule.folder) {
 		return errors.New("Указанный путь не существует")
@@ -36,21 +38,21 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				continue
 			}
 			//сохраним подписчика для рассылки
-			id[acc] = true
+			uid[acc] = true
 		}
 	}
 
-	if len(id) == 0 {
+	if len(uid) == 0 {
 		return errors.New("Не найден подходящий для правила получатель")
 	}
 
 	//Поиск файлов согласно масок, указнных в правиле монитора
-	fl := findFiles(rule.folder, rule.mask)
-	if len(fl) == 0 {
+	files := findFiles(rule.folder, rule.mask)
+	if len(files) == 0 {
 		return errors.New("Файлы указанные в правиле не найдены")
 	}
-	fmt.Println(fl)
-	fmt.Println(id)
+	//fmt.Println(fl)
+	//fmt.Println(uid)
 
 
 	/*Выполнение действия согласно списка действий action
@@ -63,28 +65,35 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			//создадим новое извещение
 			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
 			//вложим все найденные файлы
-			for _, file := range fl {
+			for file, _ := range files {
 				if err := msg.Attach(file); err != nil {
 					log.Println("Ошибка прикрепления файла \"", file, "\":", err)
 				}
 			}
 			//добавим всех получателей правила, для
-			//которых нашлись записи в адресной книге
-			for k := range id {
-				if !id[k] {
+			//которых нашлись записи в адресной книге в получатели сообщений
+			for k := range uid {
+				if !uid[k] {
 					continue
 				}
 				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
 				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
-				fmt.Println("MSG TO", msg.To)
+				//Уберем повторения адресов если таковые случатся
+				msg.To = Dedup(msg.To)
 			}
 			// Отправим сообщение
 			if err := SendEmailMsg(auth, msg); err != nil {
 				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
+				return err
 			}
+			for name, mask := range files {
+				GlobalHist.AddEvt(time.Now().Add(-24 * time.Hour), rule.id, code.id, mask, true, name, msg.To)
+				fmt.Println("RuleDebug:", time.Now(), rule.id, code.id, mask, true, name, msg.To)
+				fmt.Println("CHECK EVENT:", GlobalHist.IsEventExist(time.Now(), rule.id, code.id, mask, name))
+			}
+			GlobalHist.Write()
 		} /*if code.id == 10*/
 	}
-
 	return nil
 }
 
@@ -97,9 +106,10 @@ func ifPathExist(path string) bool {
 }
 
 //Выполняет поиск файлов в каталоге согласно списка масок
-func findFiles(dir string, mask []string) (files []string) {
+func findFiles(dir string, mask []string) (files map[string]string) {
 	var err error
 	var list []string
+	files = make(map[string]string)
 
 	for i := range mask {
 		list, err = filepath.Glob(dir + "/" + mask[i])
@@ -107,11 +117,14 @@ func findFiles(dir string, mask []string) (files []string) {
 			log.Println("findFiles error: ", err)
 			return nil
 		}
-		files = append(files, list...)
-
+		//files = append(files, list...)
+		for _, f := range list {
+			files[f] = mask[i]
+		}
 	}
-	//Удаляем дубликаты из результата
-	return Dedup(files)
+	// Удаляем дубликаты из результата
+	// return Dedup(files)
+	return files
 }
 
 //Дедупликатор для среза строк

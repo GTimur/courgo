@@ -8,7 +8,7 @@
 		"Addr": "10.20.20.6",
 		"Port": 25,
 		"Account": "noti@ymkbank.ru",
-		"Password": "Bank9991",
+		"Password": "blank",
 		"From": "noti@ymkbank.ru",
 		"UseTLS": false
 	}

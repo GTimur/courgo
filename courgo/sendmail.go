@@ -2,7 +2,6 @@
 package courgo
 
 import (
-	"html/template"
 	"net/smtp"
 	"log"
 	"net/mail"
@@ -13,20 +12,6 @@ type EmailCredentials struct {
 	Username, Password, Server, From string
 	Port                             int
 	UseTLS                           bool
-}
-
-const emailTemplate = `From: {{.From}}
-To: {{.To}}
-Subject: {{.Subject}}
-
-{{.Body}}
-`
-
-var t *template.Template
-
-func init() {
-	t = template.New("email")
-	t.Parse(emailTemplate)
 }
 
 func SendEmailMsg(authCreds EmailCredentials, msg *Message) error {

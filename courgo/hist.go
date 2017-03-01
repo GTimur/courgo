@@ -78,7 +78,7 @@ func (h *Hist) Write() (err error) {
 			strconv.FormatBool(evt.Completed) + "\t" +
 			evt.Mask + "\t" +
 			evt.File + "\t" +
-			strings.Join(evt.Rcpt,",") + "\r\n"
+			strings.Join(evt.Rcpt, ",") + "\r\n"
 		hst = append(hst, line)
 		// Соберем индексы событий
 		// для разметки признака isWritten
@@ -88,32 +88,34 @@ func (h *Hist) Write() (err error) {
 		return err
 	}
 	for i, ln := range hst {
-		_,err:=file.WriteString(ln)
-		if err!=nil{
+		_, err := file.WriteString(ln)
+		if err != nil {
 			log.Printf("Ошибка записи файла истории: %v\n", err)
 			return err
 		}
-		h.Events[i].IsWritten=true
+		h.Events[i].IsWritten = true
 	}
 
 	return err
 }
 
 // Проверяет есть ли событие которое выполнялось правилом
-// для данного файла
-func (h *Hist) IsEventExist(Date time.Time, RuleID uint64, ActType uint64, Mask string, File string) bool {
+// для данного файла (все события актуальны в течение суточного окна)
+func (h *Hist) IsEventExist(Date time.Time, RuleID uint64, ActType uint64, File string) bool {
 	// Проверим есть ли файлы обработанные нашим правилом
-	for _,evt := range h.Events{
-		if evt.File != File && evt.RuleID != RuleID && evt.Mask != Mask && evt.ActType!=ActType && !evt.Date.After(BeginOfDay(Date)){
-			fmt.Println("DEBUG EVENT EXIST IN:",BeginOfDay(Date),evt.Date,evt.Date.After(BeginOfDay(Date)))
+	for _, evt := range h.Events {
+		//fmt.Println("====:", evt.File, " ", File, " ", evt.RuleID, " ", RuleID, " ", evt.Date, " ", BeginOfDay(Date))
+		if evt.Date.Before(BeginOfDay(Date)) {
 			continue
 		}
-		fmt.Println("DEBUG EVENT EXIST OUT:",BeginOfDay(Date),evt.Date,evt.Date.After(BeginOfDay(Date)))
+		if strings.Compare(evt.File, File) != 0 || evt.RuleID != RuleID || evt.ActType != ActType {
+			continue
+		}
+		fmt.Println("Event already exist.")
 		return true
 	}
 	return false
 }
-
 
 func BeginOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()

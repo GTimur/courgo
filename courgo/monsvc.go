@@ -16,6 +16,10 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) 
 		fmt.Println("RULE ID =", r.id, r.mask)
 		runRule(r, accbook, auth)
 	}
+	for _, r := range rules.collection {
+		fmt.Println("RULE ID =", r.id, r.mask)
+		runRule(r, accbook, auth)
+	}
 	fmt.Println("StartMonitor: DONE.")
 }
 
@@ -54,7 +58,6 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//fmt.Println(fl)
 	//fmt.Println(uid)
 
-
 	/*Выполнение действия согласно списка действий action
 	//Обработка кодов действий
 	//10 = отправить найденные вложения по email, с указанием subject и body в сообщении.
@@ -62,10 +65,26 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	for _, code := range rule.action {
 		//Код 10 = отправка email уведомления о поступлении файла
 		if code.id == 10 {
+			// Убедимся что по данному файлу данным правилом не выполнялось действий
+
+			now := time.Now()
+			for name := range files {
+				if GlobalHist.IsEventExist(now, rule.id, code.id, name) {
+					// иначе - удалим его из списка
+					if len(files) == 0 {
+						return errors.New("Файлы указанные в правиле не найдены")
+					}
+					delete(files, name)
+					continue
+				}
+			}
+			if len(files) == 0 {
+				return errors.New("Файлы указанные в правиле не найдены")
+			}
 			//создадим новое извещение
 			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
 			//вложим все найденные файлы
-			for file, _ := range files {
+			for file := range files {
 				if err := msg.Attach(file); err != nil {
 					log.Println("Ошибка прикрепления файла \"", file, "\":", err)
 				}
@@ -81,16 +100,17 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				//Уберем повторения адресов если таковые случатся
 				msg.To = Dedup(msg.To)
 			}
+
 			// Отправим сообщение
 			if err := SendEmailMsg(auth, msg); err != nil {
 				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
 				return err
 			}
+			// Добавим в историю события об обработке для каждого файла
 			for name, mask := range files {
-				GlobalHist.AddEvt(time.Now().Add(-24 * time.Hour), rule.id, code.id, mask, true, name, msg.To)
-				fmt.Println("RuleDebug:", time.Now(), rule.id, code.id, mask, true, name, msg.To)
-				fmt.Println("CHECK EVENT:", GlobalHist.IsEventExist(time.Now(), rule.id, code.id, mask, name))
+				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 			}
+			// Записываем имеющуюся несохранненную историю на диск
 			GlobalHist.Write()
 		} /*if code.id == 10*/
 	}
@@ -139,7 +159,7 @@ func Dedup(slice []string) []string {
 
 	//Перенесем отображение в результат
 	result := []string{}
-	for key, _ := range checked {
+	for key := range checked {
 		result = append(result, key)
 	}
 

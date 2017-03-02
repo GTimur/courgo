@@ -1,4 +1,10 @@
-//Web-сервер реализует интерфейс управления приложением
+/*
+// Web-сервер реализует интерфейс управления приложением
+
+   Statistics
+   Subscribers book manager
+   Monitor rules
+*/
 package courgo
 
 import (
@@ -391,7 +397,7 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 			}
 			//Заполним глобальный конфиг данными из формы
 			if err := GlobalConfig.ConfigInit(GlobalConfigFile, jh["web-addr"], uint16(webport), jh["smtp-addr"], uint(smtpport),
-				jh["from-email"], jh["smtp-login"], jh["smtp-password"], strings.Contains(jh["use-tls"], "useTLS")); err != nil {
+				jh["smtp-login"], jh["smtp-password"], jh["from-email"], jh["from-name"], strings.Contains(jh["use-tls"], "useTLS")); err != nil {
 				enc := json.NewEncoder(w)
 				enc.Encode(err.Error())
 				break

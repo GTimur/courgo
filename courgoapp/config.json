@@ -10,6 +10,7 @@
 		"Account": "noti@ymkbank.ru",
 		"Password": "blank",
 		"From": "noti@ymkbank.ru",
+		"FromName": "Информер GO",
 		"UseTLS": false
 	}
 }

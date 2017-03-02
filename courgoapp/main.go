@@ -19,7 +19,7 @@ func main() {
 	cfg := courgo.Config{}
 	cfg.SetJSONFile("config.json")
 	cfg.SetManagerSrv("127.0.0.1",9090)
-	cfg.SetSMTPSrv("smtp.yandex.ru",465,"to-timur@yandex.ru","blank","to-timur@yandex.ru",true)
+	cfg.SetSMTPSrv("smtp.yandex.ru",465,"to-timur@yandex.ru","blank","to-timur@yandex.ru","Информатор GO",true)
 	//cfg.WriteJSON()
 	cfg.ReadJSON()
 
@@ -80,7 +80,20 @@ func main() {
 	//courgo.WriteJSONFile(&courgo.GlobalMonCol)
 	courgo.ReadJSONFile(&courgo.GlobalMonCol)
 	courgo.GlobalHist.SetFilename("history.dat")
-	courgo.StartMonitor(courgo.GlobalMonCol,courgo.GlobalBook, cfg.SMTPCred())
+	//courgo.StartMonitor(courgo.GlobalMonCol,courgo.GlobalBook, cfg.SMTPCred())
+
+	/* CHECK ARCDIR
+	courgo.GlobalArchi.SetDateNow()
+	courgo.GlobalArchi.SetSrc("Y:\\TEMP\\SRC")
+	courgo.GlobalArchi.SetDst("Y:\\TEMP\\TEST")
+
+	if err:=courgo.GlobalArchi.FullCopy(); err!=nil{
+		log.Println(err)
+	}
+
+	fmt.Println(courgo.ArcDir(time.Now()))
+	/****************/
+
 
 
 	/*Запускаем сервер обслуживания "MENU"*/

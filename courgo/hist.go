@@ -1,4 +1,16 @@
-// Реализует хранение сведений об обработанных файлах
+/* Реализует хранение сведений об обработанных файлах
+- История обработанных сообщений сохраняется в процессе работы программы в файл для просмотра статистики работы программы.
+- Оперативная история обработанных сообщений хранится в памяти приложения и очищается в начале дня. (Окно хранения - сутки.)
+История состав:
+	Дата/время,
+	Номер правила,
+	Тип действия (ID),
+	Статус (обработан, ожидается дальнейшая обработка),
+	Маска,
+	Полное имя файла включая путь,
+	Список получателей (для кого выполнялось действие),
+	Признак сброса данных в файл
+*/
 package courgo
 
 import (
@@ -72,6 +84,10 @@ func (h *Hist) Write() (err error) {
 		if evt.IsWritten {
 			continue
 		}
+		// Сохраняем в историю события только из текущей даты (с 00 часов текущего дня)
+		if evt.Date.Before(BeginOfDay(time.Now())) {
+			continue
+		}
 		line = evt.Date.Format("2006-01-02 15:04:05") + "\t" +
 			strconv.Itoa(int(evt.RuleID)) + "\t" +
 			strconv.Itoa(int(evt.ActType)) + "\t" +
@@ -120,4 +136,33 @@ func (h *Hist) IsEventExist(Date time.Time, RuleID uint64, ActType uint64, File 
 func BeginOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
+// Удаляет всю историю из памяти до 0 часов указаннго дня Day.
+func (h *Hist) CleanUntilDay(Day time.Time) error {
+	for i, evt := range h.Events {
+		if !evt.Date.Before(BeginOfDay(Day)) {
+			continue
+		}
+		// Удалим событие из списка если его дата меньше указанной
+		if len(h.Events[0].File) == 0 {
+			return nil // нет данных для обработки
+		}
+		h.Events = append(h.Events[:i], h.Events[i + 1:]...)
+	}
+	return nil
+}
+
+// Проверяет настал ли новый операционный день.
+// Если последнее событие было до начала текущего дня - новый день настал.
+func (h *Hist) IsNewDay(Day time.Time) bool {
+	if len(h.Events[0].File) == 0 {
+		return false // нет данных для обработки
+	}
+	// Последнее событие датировано не раньше начала текущего дня
+	if !h.Events[len(h.Events) - 1].Date.Before(Day) {
+		return false
+	}
+	// Последнее событие датировано РАНЬШЕ начала текущего дня
+	return true
 }

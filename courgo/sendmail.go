@@ -1,4 +1,7 @@
-//Реализует отправку почтовых сообщений
+/*
+ 	Реализует отправку почтовых сообщений с вложениями.
+ */
+
 package courgo
 
 import (
@@ -9,7 +12,7 @@ import (
 
 //Структура учетных данных sendmail
 type EmailCredentials struct {
-	Username, Password, Server, From string
+	Username, Password, Server, From, FromName string
 	Port                             int
 	UseTLS                           bool
 }
@@ -17,7 +20,7 @@ type EmailCredentials struct {
 func SendEmailMsg(authCreds EmailCredentials, msg *Message) error {
 
 	//Зафиксируем сведения об отправителе
-	msg.From = mail.Address{Name: "COURIER GO", Address: authCreds.From}
+	msg.From = mail.Address{Name: authCreds.FromName, Address: authCreds.From}
 
 	//Отправляем почту
 	auth := smtp.PlainAuth("", authCreds.Username, authCreds.Password, authCreds.Server)

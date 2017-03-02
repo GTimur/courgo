@@ -1,4 +1,18 @@
-//Реализует структуру и методы файлового монитора
+/*
+Реализует структуру и методы файлового монитора
+
+  MONITOR -> Monitor search rules (Monitor Search Rule ID = MSRID)
+          -> Check ALL FOLDERS from MSRID's
+          -> Send notification to subscribers from address book (Subscriber ID = SID)
+          -> Do possible Actions (Action ID = AID)
+
+  MONITOR RULE	-> Folder
+              	-> Mask
+                -> Subscribers (SID) []
+                -> Notification e-mail message text header and body
+                -> Reader (RID)
+                -> Actions (AID) []
+*/
 package courgo
 
 import (

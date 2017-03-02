@@ -1,4 +1,14 @@
-//Реализует сервис файлового монитора
+/*
+	Реализует сервис файлового монитора
+
+	Реализует действия с вложениями перед отправкой
+ 	1. Вложить файл как есть.
+ 	Код действия = 10
+ 	2. Распаковка архивных файлов с последующим вложением содержимого в письмо.
+ 	Код действия = 11
+*/
+
+
 package courgo
 
 import (
@@ -13,11 +23,16 @@ import (
 //Запускает выполнение правил монитора по всему списку
 func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) {
 	for _, r := range rules.collection {
-		fmt.Println("RULE ID =", r.id, r.mask)
-		runRule(r, accbook, auth)
-	}
-	for _, r := range rules.collection {
-		fmt.Println("RULE ID =", r.id, r.mask)
+		fmt.Println("RULE ID = ", r.id, "MASK = ", r.mask)
+		now := time.Now()
+		// Проверим настал ли новый день для регистрации событий
+		if GlobalHist.IsNewDay(now) {
+			// Запишем все назаписанные события на диск
+			GlobalHist.Write()
+			// Сотрем из памяти программы историю о старых событиях
+			GlobalHist.CleanUntilDay(now)
+		}
+		// Запустим очередное правило
 		runRule(r, accbook, auth)
 	}
 	fmt.Println("StartMonitor: DONE.")
@@ -66,7 +81,6 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 		//Код 10 = отправка email уведомления о поступлении файла
 		if code.id == 10 {
 			// Убедимся что по данному файлу данным правилом не выполнялось действий
-
 			now := time.Now()
 			for name := range files {
 				if GlobalHist.IsEventExist(now, rule.id, code.id, name) {
@@ -112,7 +126,11 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			}
 			// Записываем имеющуюся несохранненную историю на диск
 			GlobalHist.Write()
-		} /*if code.id == 10*/
+		} /* if code.id == 10 */
+		if code.id == 11 {
+
+
+		} /* if code.id == 11 */
 	}
 	return nil
 }

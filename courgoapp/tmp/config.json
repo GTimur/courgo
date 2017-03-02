@@ -5,11 +5,12 @@
 		"Port": 8000
 	},
 	"SMTPSrv": {
-		"Addr": "smtp.yandex.ru",
-		"Port": 465,
-		"Account": "to-timur@yandex.ru",
-		"Password": "blank",
-		"From": "to-timur@yandex.ru",
-		"UseTLS": true
+		"Addr": "10.20.20.6",
+		"Port": 25,
+		"Account": "noti@ymkbank.ru",
+		"Password": "Bank9991",
+		"From": "noti@ymkbank.ru",
+		"FromName": "Информатор GO",
+		"UseTLS": false
 	}
 }

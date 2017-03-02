@@ -61,6 +61,15 @@
        TCP-порт
       </span>
      </div>
+	 <div class="form-group ">
+      <label class="control-label requiredField" for="from-name">
+       Имя отправителя
+      </label>
+      <input class="form-control" id="from-name" name="from-name" placeholder="Информатор GO" type="text"/>
+      <span class="help-block" id="hint_from-name">
+       Имя которое будет отображаться совместно с email адресом отправителя
+      </span>
+     </div>
      <div class="form-group ">
       <label class="control-label requiredField" for="from-email">
        Email

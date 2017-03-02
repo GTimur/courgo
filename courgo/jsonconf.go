@@ -34,6 +34,7 @@ type srvSMTP struct {
 	Account  string //smtp аккаунт для отправки сообщений
 	Password string
 	From     string //Адрес отправителя
+	FromName string //Имя отправителя, например "Информатор GO"
 	UseTLS   bool   //auth: использовать TLS или plain/text
 }
 
@@ -61,13 +62,14 @@ func (c *Config) SetManagerSrv(addr string, port uint16) {
 	}
 }
 
-func (c *Config) SetSMTPSrv(addr string, port uint, username string, password string, from string, tls bool) {
+func (c *Config) SetSMTPSrv(addr string, port uint, username string, password string, from string, fromname string, tls bool) {
 	c.smtpSrv = srvSMTP{
 		Addr: addr,
 		Port: port,
 		Account: username,
 		Password: password,
 		From: from,
+		FromName:fromname,
 		UseTLS: tls,
 	}
 }
@@ -93,6 +95,7 @@ func (c *Config) SMTPCred() EmailCredentials {
 		Username:c.smtpSrv.Account,
 		Password:c.smtpSrv.Password,
 		From:c.smtpSrv.From,
+		FromName:c.smtpSrv.FromName,
 		UseTLS:c.smtpSrv.UseTLS,
 	}
 	return creds
@@ -228,7 +231,7 @@ func WriteJSONFile(data readerWriterJSON) error {
 // Инициализация переменной Config и проверка
 // параметров на ошибки
 func (c *Config) ConfigInit(jsonfile string, webaddr string, webport uint16, smtpaddr string,
-smtpport uint, user string, passwd string, emailfrom string, usetls bool) (err error) {
+smtpport uint, user string, passwd string, emailfrom string, fromname string, usetls bool) (err error) {
 
 	if len(jsonfile) < 1 {
 		return errors.New("ConfigInit:Имя jsonfile слишком короткое.")
@@ -245,6 +248,9 @@ smtpport uint, user string, passwd string, emailfrom string, usetls bool) (err e
 	if smtpport <= 1 {
 		return errors.New("ConfigInit:Порт smtpport указан неверно.")
 	}
+	if len(fromname) < 1 {
+		return errors.New("ConfigInit:Имя отправителя писем заполнено неверно.")
+	}
 	if len(user) < 1 {
 		return errors.New("ConfigInit:Email адрес от имени которого ведется рассылка заполнен неверно.")
 	}
@@ -260,6 +266,7 @@ smtpport uint, user string, passwd string, emailfrom string, usetls bool) (err e
 	c.smtpSrv.Account = user
 	c.smtpSrv.Password = passwd
 	c.smtpSrv.From = emailfrom
+	c.smtpSrv.FromName = fromname
 	c.smtpSrv.UseTLS = usetls
 
 	return nil

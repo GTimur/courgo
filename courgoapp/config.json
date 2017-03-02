@@ -8,8 +8,9 @@
 		"Addr": "10.20.20.6",
 		"Port": 25,
 		"Account": "noti@ymkbank.ru",
-		"Password": "blank",
+		"Password": "Bank9991",
 		"From": "noti@ymkbank.ru",
+		"FromName": "Информер GO",
 		"UseTLS": false
 	}
 }

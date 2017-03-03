@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"os"
 	"log"
+	"time"
 )
 
 
@@ -76,23 +77,27 @@ func main() {
 	//fmt.Println("MAIN2:",res)
 
 
+	/* CHECK ARCDIR */
+	courgo.GlobalArchi.SetDateNow()
+	courgo.GlobalArchi.SetTmp("Y:\\TEMP\\TMP")
+	courgo.GlobalArchi.SetSrc("Y:\\TEMP\\SRC")
+	courgo.GlobalArchi.SetDst("Y:\\TEMP\\TEST")
+
+	/*if err:=courgo.GlobalArchi.FullCopy(); err!=nil{
+		log.Println(err)
+	}*/
+
+	fmt.Println(courgo.ArcDir(time.Now()))
+	/****************/
+
+
+
 	courgo.GlobalMonCol.SetJSONFile("col.json")
 	//courgo.WriteJSONFile(&courgo.GlobalMonCol)
 	courgo.ReadJSONFile(&courgo.GlobalMonCol)
 	courgo.GlobalHist.SetFilename("history.dat")
-	//courgo.StartMonitor(courgo.GlobalMonCol,courgo.GlobalBook, cfg.SMTPCred())
+	courgo.StartMonitor(courgo.GlobalMonCol,courgo.GlobalBook, cfg.SMTPCred())
 
-	/* CHECK ARCDIR
-	courgo.GlobalArchi.SetDateNow()
-	courgo.GlobalArchi.SetSrc("Y:\\TEMP\\SRC")
-	courgo.GlobalArchi.SetDst("Y:\\TEMP\\TEST")
-
-	if err:=courgo.GlobalArchi.FullCopy(); err!=nil{
-		log.Println(err)
-	}
-
-	fmt.Println(courgo.ArcDir(time.Now()))
-	/****************/
 
 
 

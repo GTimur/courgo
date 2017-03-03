@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"errors"
 	"time"
+	"io/ioutil"
 )
 
 //Запускает выполнение правил монитора по всему списку
@@ -33,7 +34,10 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) 
 			GlobalHist.CleanUntilDay(now)
 		}
 		// Запустим очередное правило
-		runRule(r, accbook, auth)
+		if r.id > 999 {
+			runRule(r, accbook, auth)
+		}
+
 	}
 	fmt.Println("StartMonitor: DONE.")
 }
@@ -77,6 +81,16 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//Обработка кодов действий
 	//10 = отправить найденные вложения по email, с указанием subject и body в сообщении.
 	*/
+
+
+	// Создадим временную директорию для различных нужд
+	dir, err := ioutil.TempDir(GlobalArchi.tmp, "monsvc")
+	if err != nil {
+		return err
+	}
+	// Удалим временную директорию
+	defer os.RemoveAll(dir)
+
 	for _, code := range rule.action {
 		//Код 10 = отправка email уведомления о поступлении файла
 		if code.id == 10 {
@@ -127,9 +141,74 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			// Записываем имеющуюся несохранненную историю на диск
 			GlobalHist.Write()
 		} /* if code.id == 10 */
+
 		if code.id == 11 {
+			// Убедимся что по данному файлу данным правилом не выполнялось действий
+			now := time.Now()
+			for name := range files {
+				if GlobalHist.IsEventExist(now, rule.id, code.id, name) {
+					// иначе - удалим его из списка
+					if len(files) == 0 {
+						return errors.New("Файлы указанные в правиле не найдены")
+					}
+					delete(files, name)
+					continue
+				}
+			}
+			if len(files) == 0 {
+				return errors.New("Файлы указанные в правиле не найдены")
+			}
+			// Cоздадим новое извещение
+			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
+			// Добавим всех получателей правила, для
+			// которых нашлись записи в адресной книге в получатели сообщений
+			for k := range uid {
+				if !uid[k] {
+					continue
+				}
+				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
+				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				//Уберем повторения адресов если таковые случатся
+				msg.To = Dedup(msg.To)
+			}
 
-
+			// Распакуем каждый файл и отправим его содержимое отдельным письмом.
+			for file, mask := range files {
+				// Распакуем файл и получим его содержимое
+				funarc, err := prepUnArc(file, dir)
+				if err != nil {
+					return err
+				}
+				// Прикрепим к письму распакованные файлы
+				for name := range funarc {
+					if err := msg.Attach(name); err != nil {
+						log.Println("Ошибка прикрепления файла \"", file, "\":", err, " Code.ID=", code.id)
+					}
+				}
+				// Отправим сообщение
+				if err := SendEmailMsg(auth, msg); err != nil {
+					log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
+					// Удалим файлы из временного каталога
+					for name := range funarc {
+						os.Remove(name)
+					}
+					return err
+				}
+				// Удалим файлы из временного каталога
+				for name := range funarc {
+					if err := os.Remove(name); err != nil {
+						log.Println("Не удалось удалить файл ", name, ". Ошибка:", err)
+					}
+					delete(msg.Attachments, filepath.Base(name))
+				}
+				// Добавим в историю события об обработке для каждого файла
+				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, file, msg.To)
+				for name, mask := range funarc {
+					GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
+				}
+				// Записываем имеющуюся несохранненную историю на диск
+				GlobalHist.Write()
+			}
 		} /* if code.id == 11 */
 	}
 	return nil

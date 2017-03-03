@@ -34,18 +34,37 @@
 
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="dept">Отдел</label>  
+  <label class="col-md-4 control-label" for="dir">Директория наблюдения</label>  
   <div class="col-md-5">
-  <input type="file" id="flup" onchange="getfolder(event)" webkitdirectory mozdirectory msdirectory odirectory directory multiple />
+  <input id="dir" name="rule-dir" type="text" placeholder="C:\My\Files\To\Monitor" class="form-control input-md">
+  <span class="help-block">Директория в которой монитор будет осуществлять поиск файлов</span>  
+  </div>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="mask">Шаблон поиска файлов</label>  
+  <div class="col-md-5">
+  <input id="mask" name="Файловая маска" type="text" placeholder="*.rar, *.txt, *.doc" class="form-control input-md">
+  <span class="help-block">Маска для поиска файлов, разделитель: запятая</span>  
+  </div>
 </div>
 
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="email">E-mail:</label>  
-  <div class="col-md-4">
-  <input id="email" name="email" type="text" placeholder="aspushkin@ymkbank.ru, pushkinas@ymkbank.ru" class="form-control input-md">
-  <span class="help-block">Адреса электронной почты, разделитель: запятая</span>  
+  <label class="col-md-4 control-label" for="msgsubj">Заголовок извещения</label>  
+  <div class="col-md-5">
+  <input id="msgsubj" name="Тема письма" type="text" placeholder="Файлы из ФТС" class="form-control input-md">
+  <span class="help-block">Тема письма при отправке уведомления</span>  
   </div>
+</div>
+
+<!-- Text AREA input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="msgbody">Заголовок извещения</label>  
+		<div class="col-md-5">					    
+        <textarea id="msgbody" rows="3" class="form-control k-textbox" data-role="textarea" style="margin-top: 0px; margin-bottom: 0px; height: 72px;" name="msgbody"></textarea>
+		<span class="help-block">Содержимое письма при отправке уведомления</span>  						        
+		</div>
 </div>
 
 <!-- Button (Double) -->

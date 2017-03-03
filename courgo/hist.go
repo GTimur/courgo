@@ -100,7 +100,7 @@ func (h *Hist) Write() (err error) {
 		// для разметки признака isWritten
 		idx = append(idx, i)
 	}
-	if len(hst[0]) == 0 {
+	if len(hst) == 0 {
 		return err
 	}
 	for i, ln := range hst {
@@ -145,7 +145,7 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 			continue
 		}
 		// Удалим событие из списка если его дата меньше указанной
-		if len(h.Events[0].File) == 0 {
+		if len(h.Events) == 0 {
 			return nil // нет данных для обработки
 		}
 		h.Events = append(h.Events[:i], h.Events[i + 1:]...)
@@ -156,7 +156,7 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 // Проверяет настал ли новый операционный день.
 // Если последнее событие было до начала текущего дня - новый день настал.
 func (h *Hist) IsNewDay(Day time.Time) bool {
-	if len(h.Events[0].File) == 0 {
+	if len(h.Events) == 0 {
 		return false // нет данных для обработки
 	}
 	// Последнее событие датировано не раньше начала текущего дня

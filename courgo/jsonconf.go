@@ -12,17 +12,20 @@ import (
 )
 
 type Config struct {
-	jsonFile   string //путь к файлу если структура будет экспортироваться в JSON
+	jsonFile   string // Путь к файлу если структура будет экспортироваться в JSON
+	tmpDir     string // Директория для временных файлов
 	managerSrv managerSrv
 	smtpSrv    srvSMTP
 }
 
 //Глобальная переменная для хранения настроек
 var GlobalConfig Config = Config{};
+
 const GlobalConfigFile = "config.json"
 
 type configJSON struct {
 	JSONFile   string //путь к файлу если структура будет экспортироваться в JSON
+	TempDir    string // Директория для временных файлов
 	ManagerSrv managerSrv
 	SMTPSrv    srvSMTP
 }
@@ -53,6 +56,10 @@ type readerWriterJSON interface {
 /*SETTERS*/
 func (c *Config) SetJSONFile(jsonfile string) {
 	c.jsonFile = jsonfile
+}
+
+func (c *Config) SetTempDir(tempdir string) {
+	c.tmpDir = tempdir
 }
 
 func (c *Config) SetManagerSrv(addr string, port uint16) {
@@ -166,6 +173,7 @@ func (c *Config) readJSON() (err error) {
 		//return err
 	}
 	c.jsonFile = jsonConfig.JSONFile
+	c.tmpDir = jsonConfig.TempDir
 	c.managerSrv = jsonConfig.ManagerSrv
 	c.smtpSrv = jsonConfig.SMTPSrv
 
@@ -194,6 +202,7 @@ func (c *Config) writeJSON() (err error) {
 		JSONFile: c.jsonFile,
 		ManagerSrv: c.managerSrv,
 		SMTPSrv: c.smtpSrv,
+		TempDir: c.tmpDir,
 	}
 
 	// пишем в файл
@@ -230,9 +239,13 @@ func WriteJSONFile(data readerWriterJSON) error {
 
 // Инициализация переменной Config и проверка
 // параметров на ошибки
-func (c *Config) ConfigInit(jsonfile string, webaddr string, webport uint16, smtpaddr string,
-smtpport uint, user string, passwd string, emailfrom string, fromname string, usetls bool) (err error) {
+func (c *Config) ConfigInit(jsonfile string, tempdir, webaddr string, webport uint16, smtpaddr string,
+smtpport uint, user string, passwd string, emailfrom string, fromname string, usetls bool) (error) {
 
+	// Если директории не существует
+	if _, err := os.Stat(tempdir); os.IsNotExist(err) {
+		return errors.New("ConfigInit:Временный каталог tempdir не существует.")
+	}
 	if len(jsonfile) < 1 {
 		return errors.New("ConfigInit:Имя jsonfile слишком короткое.")
 	}
@@ -259,6 +272,7 @@ smtpport uint, user string, passwd string, emailfrom string, fromname string, us
 	}
 
 	c.jsonFile = jsonfile
+	c.tmpDir = tempdir
 	c.managerSrv.Addr = webaddr
 	c.managerSrv.Port = webport
 	c.smtpSrv.Addr = smtpaddr

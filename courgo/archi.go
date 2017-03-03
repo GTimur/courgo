@@ -45,6 +45,10 @@ func (a *Archi) SetDst(dst string) {
 	a.dst = dst
 }
 
+func (a *Archi) SetTmp(tmp string) {
+	a.tmp = tmp
+}
+
 // Возвращает директорию вида ГГГГ\ММ\ДД с учетом даты.
 func ArcDir(date time.Time) string {
 	res := strconv.Itoa(date.Year()) //ГГГГ
@@ -171,7 +175,7 @@ func MakeCopyAll(dst string, src string) error {
 
 // Разархивирует архивные файлы при помощи unrar.exe
 // destpath = путь к папке для разархивации
-func UnArc(file string, dstpath string) error {
+func unArc(file string, dstpath string) error {
 	if !ifPathExist(file) {
 		return errors.New("UnArc: Файл \"" + file + "\" не существует.")
 	}
@@ -187,4 +191,27 @@ func UnArc(file string, dstpath string) error {
 		return err
 	}
 	return nil
+}
+
+// Выполняет разархивацию файла во временный каталог
+// и возвращает список файлов из временного каталога
+// mask = маска по которой был найден файл (для monsvc)
+func prepUnArc(file, dir string) (unarc map[string]string, err error) {
+	if len(file) == 0 {
+		return unarc, errors.New("PrepUnArc: Файлы для обработки не найдены.")
+	}
+
+	// Распакуем файл во временный каталог
+	if err := unArc(file, dir); err != nil {
+		return unarc, err
+	}
+
+	// Соберем все найденные файлы
+	unarc = findFiles(dir, []string{"*.*", "*"})
+
+	if len(unarc) == 0 {
+		return unarc, errors.New("PrepUnArc: Архив пустой.")
+	}
+
+	return unarc, nil
 }

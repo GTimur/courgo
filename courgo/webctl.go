@@ -396,7 +396,7 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			//Заполним глобальный конфиг данными из формы
-			if err := GlobalConfig.ConfigInit(GlobalConfigFile, jh["web-addr"], uint16(webport), jh["smtp-addr"], uint(smtpport),
+			if err := GlobalConfig.ConfigInit(GlobalConfigFile, jh["temp-dir"], jh["web-addr"], uint16(webport), jh["smtp-addr"], uint(smtpport),
 				jh["smtp-login"], jh["smtp-password"], jh["from-email"], jh["from-name"], strings.Contains(jh["use-tls"], "useTLS")); err != nil {
 				enc := json.NewEncoder(w)
 				enc.Encode(err.Error())

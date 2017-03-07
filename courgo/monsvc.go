@@ -37,7 +37,6 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) 
 		if r.id > 999 {
 			runRule(r, accbook, auth)
 		}
-
 	}
 	fmt.Println("StartMonitor: DONE.")
 }
@@ -262,32 +261,3 @@ func Dedup(slice []string) []string {
 
 	return result
 }
-
-/*
-func printFileName(path string, info os.FileInfo, err error) error {
-	if info.IsDir() {
-		return err
-	}
-	log.Println("Walk: ", path, " ", info.Name())
-	return err
-}
-
-//Просмотр вайлов в директории
-func listDir(dirpath string) {
-
-	match, err := filepath.Glob(dirpath + "/*.*")
-	// fileinfo, err := //ioutil.ReadDir(dirpath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range match {
-		//if file.IsDir() {
-		//	fmt.Println(file.Name()," <DIR>")
-		//	continue
-		//}
-		fmt.Println(file)
-	}
-	ioutil.ReadDir(dirpath)
-}
-*/

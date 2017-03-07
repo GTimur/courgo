@@ -80,7 +80,7 @@
                 <div class="modal-body">
                     <p>Вы собираетесь удалить правило из базы данных.</p>					
 					<p>К удалению:</p>
-					<div id="userid"></div>
+					<div id="recid"></div>
 					<p><br>Вы уверены что это необходимо сделать?</p>
                     <p class="debug-url"></p>
                 </div>
@@ -105,11 +105,11 @@ $('#btnremove').prop('disabled', true);
         datatype: 'json',
         contentType: 'application/json; charset=UTF-8',        
         error: function () { alert("handshake didn't go through") }, /* call disconnect function */
-        data: JSON.stringify(["NewAcc"]),
+        data: JSON.stringify({Post:"Register"}),
         success: function (data) {
-			//alert("SUCCESS: "+JSON.parse(data));
+			// alert("SUCCESS: "+JSON.parse(data));
 			// handle AJAX redirection
-			if (JSON.parse(data) == "register") {
+			if (JSON.parse(data) == "RegisterOK") {
 				//alert("REG: "+data);
 				window.location = '/mon/register';
 			}		
@@ -117,59 +117,7 @@ $('#btnremove').prop('disabled', true);
     });	
  });
 
-//<input type="text" name="userId" id="userid" value=""/>
-	var $table = $('#table');
-    $(function () {
-        $('#show').click(function () {            
-			var vals = [];
-            $('input[name="selectItemName"]:checked').each(function () {
-                //vals.push($(this).data('index'));
-				vals.push($(this).val());				
-            });
-			
-	var jsonstring =  JSON.stringify($table.bootstrapTable('getSelections'));
-	var json = JSON.parse(jsonstring);
-	$(".modal-body #userid").val( json[0]['Name'] );
-	
-	//alert("Учетная запись №:" + json[0]['Id'] + " Имя:" + json[0]['Name'] );
-
-	var jsonstring =  JSON.stringify($table.bootstrapTable('getSelections'));
-	var json = JSON.parse(jsonstring);
-	//alert('Checked row index: ' + JSON.stringify($table.bootstrapTable('getSelections')));
-/*	for (var key in json) {
-       console.log("KEY="+key);
-       console.log("json[key]:");
-	   console.log(json[key]);
-	   console.log(json[0]['Name']);
-	}*/	
-	
-	
-	//Handshake function for JSON request!    
-    $.ajax({                 /* start ajax function to send data */
-        url: "/acc",
-        type: 'POST',
-        datatype: 'json',
-        contentType: 'application/json; charset=UTF-8',        
-        error: function () { alert("handshake didn't go through") }, /* call disconnect function */
-        data: JSON.stringify(["NewAcc","Test2","Test3"]            
-			//["SupportedConnectionTypes": "long-polling",
-            //"Channel": "/meta/handshake",
-            //"Version": "1:0"]		
-        //}
-		),
-        success: function (data) {
-			//alert("SUCCESS: "+JSON.parse(data));
-			// handle AJAX redirection
-			if (JSON.parse(data) == "register") {
-				//alert("REG: "+data);
-				//window.location = '/acc/mon';
-			}		
-        }		
-    });	
-	
-        alert('Checked row index: ' + jsonstring);
-    });
-   });
+var $table = $('#table');
 
 // Handle string array json fields [{},{}]
 function arrayStringFormatter(value) {
@@ -215,7 +163,33 @@ function actionStringFormatter(value) {
                 //index.push($(this).data('index'));			
 				vals.push($(this).val());			
             });
-	alert("Вы только что удалили запись!"+vals.join(', '));      	  
+		var jsonstring = JSON.stringify($table.bootstrapTable('getSelections'));
+		var json = JSON.parse(jsonstring);	
+		var data = {};
+		data["Post"]="RemoveButton";
+		data["Id"]=String(json[0]['Id']);
+		alert("REG: "+JSON.stringify(data));
+				
+		$.ajax({                 /* start ajax function to send data */
+        url: "/mon",
+        type: 'POST',
+        datatype: 'json',
+        contentType: 'application/json; charset=UTF-8',        
+        error: function () { alert("handshake didn't go through") }, /* call disconnect function */
+        data: JSON.stringify(data),
+        success: function (data) {			
+			// handle AJAX redirection
+			if (JSON.parse(data) == "RemoveOK") {
+				//alert("REG: "+data);
+				window.location = '/mon';				
+			}
+			if (JSON.parse(data) != "RemoveOK") {
+				alert(data);
+				//window.location = '/acc';
+			}				
+        }		
+    }); 
+	alert("Вы только что удалили запись! Id="+vals.join(', '));
 });
 
 // Fires when user check a row
@@ -226,8 +200,8 @@ $('#table').bootstrapTable({
         var jsonstring = JSON.stringify($table.bootstrapTable('getSelections'));
 		var json = JSON.parse(jsonstring);
 		///$(".modal-body #userid").val( json[0]['Name'] );
-		$(".modal-body #userid").html("ID: "+json[0]['Id']+"<br>Ф.И.О.: "+json[0]['Name']+"<br>Отдел: "+json[0]['Dept']);
-		console.log(row, $element);
+		$(".modal-body #recid").html("ID: "+json[0]['Id']+"<br>Описание: "+json[0]['Desc']+"<br>Папка: "+json[0]['Folder']+"<br>Маска:"+json[0]['Mask']);
+		//console.log(row, $element);
     },
 	
 	onUncheck: function (row, $element) {

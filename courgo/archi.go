@@ -26,6 +26,7 @@ type Archi struct {
 	/* Пути */
 	src  string
 	dst  string
+	// Каталог для хранения временных файлов
 	tmp  string
 }
 

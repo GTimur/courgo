@@ -1,4 +1,6 @@
 {{define "head"}}
+<script src="/static/duallist/jquery.bootstrap-duallistbox.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/duallist/bootstrap-duallistbox.css">
 {{end}}
 {{define "title"}}{{.Title}} {{end}}
 {{define "body"}}
@@ -25,46 +27,63 @@
 		<div class="col-md-8">
 <!-- Text input-->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="fio">Правило монитора</label>  
+  <label class="col-md-4 control-label" for="RuleName">Название правила</label>  
   <div class="col-md-5">
-  <input id="fio" name="rule-name" type="text" placeholder="Обработка паспортов сделок ФТС (вал. отдел)" class="form-control input-md">
-  <span class="help-block">Описание правила</span>  
+  <input id="RuleName" name="RuleName" type="text" placeholder="Обработка паспортов сделок ФТС (вал. отдел)" class="form-control input-md">
+  <span class="help-block">Название или краткое описание правила</span>  
   </div>
 </div>
 
-<!-- Text input-->
+<!-- DIR/MASK -->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="dir">Директория наблюдения</label>  
+  <label class="col-md-4 control-label" for="RuleDir">Директория наблюдения</label>  
   <div class="col-md-5">
-  <input id="dir" name="rule-dir" type="text" placeholder="C:\My\Files\To\Monitor" class="form-control input-md">
+  <input id="RuleDir" name="RuleDir" type="text" placeholder="C:\Папка\для\наблюдения\монитором" class="form-control input-md">
   <span class="help-block">Директория в которой монитор будет осуществлять поиск файлов</span>  
   </div>
-
-<!-- Text input-->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="mask">Шаблон поиска файлов</label>  
+  <label class="col-md-4 control-label" for="RuleMask">Шаблон поиска файлов</label>  
   <div class="col-md-5">
-  <input id="mask" name="Файловая маска" type="text" placeholder="*.rar, *.txt, *.doc" class="form-control input-md">
-  <span class="help-block">Маска для поиска файлов, разделитель: запятая</span>  
+  <input id="RuleMask" name="RuleMask" type="text" placeholder="*.rar, *.txt, *.doc" class="form-control input-md">
+  <span class="help-block">Маска для поиска файлов. Для нескольких значений - разделитель: запятая</span>  
   </div>
 </div>
 
-<!-- Text input-->
+<!-- SMTP MESSAGE -->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="msgsubj">Заголовок извещения</label>  
-  <div class="col-md-5">
-  <input id="msgsubj" name="Тема письма" type="text" placeholder="Файлы из ФТС" class="form-control input-md">
-  <span class="help-block">Тема письма при отправке уведомления</span>  
-  </div>
+	<label class="col-md-4 control-label" for="MsgSubj">Тема (заголовок) извещения</label>  
+	<div class="col-md-5">
+		<input id="MsgSubj" name="MsgSubj" type="text" placeholder="Файлы из ФТС" class="form-control input-md">
+		<span class="help-block">Тема письма при отправке уведомления</span>  
+	</div>
+	<label class="col-md-4 control-label" for="MsgBody">Текст извещения</label>  
+	<div class="col-md-5">
+			<textarea id="MsgBody" rows="5" class="form-control k-textbox" data-role="textarea" style="margin-top: 0px; margin-bottom: 0px; height: 120px;" name="MsgBody">Пересылка сообщений, полученных из ГУ Банка России по Краснодарскому краю (Краснодар) по каналам связи СВК.
+Данное сообщение было сформировано автоматически.</textarea>
+			<span class="help-block">Содержимое письма при отправке уведомления</span>
+	</div>
 </div>
 
-<!-- Text AREA input-->
+
+<!-- RCPT SELECTION -->
 <div class="form-group">
-  <label class="col-md-4 control-label" for="msgbody">Заголовок извещения</label>  
-		<div class="col-md-5">					    
-        <textarea id="msgbody" rows="3" class="form-control k-textbox" data-role="textarea" style="margin-top: 0px; margin-bottom: 0px; height: 72px;" name="msgbody"></textarea>
-		<span class="help-block">Содержимое письма при отправке уведомления</span>  						        
-		</div>
+	<label class="col-md-4 control-label" for="Rcpts">Получатели извещения</label>  
+	<div class="col-md-6">
+		<select multiple="multiple" id="Rcpts" name="Rcpts">
+			<option>Получатель 1</option>			
+		</select>
+		<span class="help-block">В правой стороне должны быть указаны получатели извещения о найденных файлах</span>
+	</div>
+</div>
+
+<!-- ACTION SELECTION -->
+<div class="form-group">
+	<label class="col-md-4 control-label" for="ActionCode">Действия</label>  
+	<div class="col-md-6">
+		<select multiple="multiple" id="ActionCode" name="ActionCode">
+			<option>Действие 1</option>			
+		</select>
+		<span class="help-block">В правой стороне должны быть указаны действия монитора с найденными файлами</span>
+	</div>
 </div>
 
 <!-- Button (Double) -->
@@ -84,13 +103,41 @@
 {{end}}
 {{define "scripts"}}
 <script type="text/javascript" language="javascript">
+//Получатели - список
+$("#Rcpts").bootstrapDualListbox();
+
+$.getJSON("/gen/data/acclist", function (array) {
+    $("#Rcpts").children().remove();
+    $.each(array, function () {
+        $('<option>').text(this).appendTo("#Rcpts");		
+    })
+    $("#Rcpts").bootstrapDualListbox('refresh', true);
+});
+//Действия - список
+$("#ActionCode").bootstrapDualListbox();
+
+$.getJSON("/gen/data/actslist", function (array) {
+    $("#ActionCode").children().remove();
+    $.each(array, function () {
+        $('<option>').text(this).appendTo("#ActionCode");		
+    })
+    $("#ActionCode").bootstrapDualListbox('refresh', true);
+});
+
 $('#savebutton').click(function () {
 $('#savebutton').prop('disabled', true);
 var data = $("#register-subscribers").serializeObject();
-data["post"]="SaveButton"
-alert(JSON.stringify(data));
+// IF Rcpts or ActionCode is not array, then cast them to array
+if( Object.prototype.toString.call( data["Rcpts"] ) !== '[object Array]' ) {
+    data["Rcpts"]=[data["Rcpts"]];	
+}
+if( Object.prototype.toString.call( data["ActionCode"] ) !== '[object Array]' ) {
+    data["ActionCode"]=[data["ActionCode"]];	
+}
+data["Post"]="SaveButton";
+//alert(JSON.stringify(data));
 $.ajax({                 /* start ajax function to send data */
-        url: "/acc/register",
+        url: "/mon/register",
         type: 'POST',
         datatype: 'json',
         contentType: 'application/json; charset=UTF-8',
@@ -99,15 +146,14 @@ $.ajax({                 /* start ajax function to send data */
         success: function (data) {
 			//alert("REG: "+data);
 			// handle AJAX redirection
-			if (JSON.parse(data) == "SaveOk") {
-				alert("Получатель был успешно зарегистрирован.");
-				window.location = '/acc';
+			if (JSON.parse(data) == "SaveOK") {
+				alert("Правило было успешно добавлено.");
+				window.location = '/mon';
 			}
-			if (JSON.parse(data) == "SaveNotOk"){
-				alert("Данные введены с ошибкой. Получатель не был добавлен.");
+			if (JSON.parse(data) != "SaveOK"){
+				alert("Ошибка: "+data);
 				$('#savebutton').prop('disabled', false);
-			}
-						
+			}	
         }
     }); 
 });
@@ -115,17 +161,18 @@ $.ajax({                 /* start ajax function to send data */
 $('#cancelbutton').click(function () {
 $('#cancelbutton').prop('disabled', true);
 $.ajax({                 /* start ajax function to send data */
-        url: "/acc/register",
+        url: "/mon/register",
         type: 'POST',
         datatype: 'json',
         contentType: 'application/json; charset=UTF-8',        
         error: function () { alert("handshake didn't go through") }, /* call disconnect function */
-        data: JSON.stringify({post:"CancelButton"}),
+        data: JSON.stringify({Post:"CancelButton"}),
         success: function (data) {			
 			// handle AJAX redirection
 			if (JSON.parse(data) == "CancelOK") {
 				//alert("REG: "+data);
-				window.location = '/acc';
+				//alert($('#actioncode').val());
+				window.location = '/mon';
 			}		
         }		
     }); 
@@ -147,11 +194,5 @@ $.fn.serializeObject = function()
     });
     return o;
 };
-function getfolder(e) {
-    var files = e.target.files;
-    var path = files[0].webkitRelativePath;
-    var Folder = [path]; //.split("/");
-    alert(Folder[0]);
-}
 </script>
 {{end}}

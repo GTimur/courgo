@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"bytes"
 	"io/ioutil"
+	"errors"
+	"strconv"
 )
 
 /* Folders Monitor
@@ -169,7 +171,6 @@ func (m *MonitorCol) NewConfig() (err error) {
 	defer file.Close()
 	return err
 }
-
 
 //Конвертирует Monitor в monitorJSON
 func (m *Monitor) monToMonJSON() monitorJSON {
@@ -418,4 +419,74 @@ func (m *Monitor) writeJSON() (err error) {
 func (m *Monitor) WriteJSON() (err error) {
 	err = m.writeJSON()
 	return
+}
+
+
+// Добавляет новое правило в коллекцию правил мониторов,
+// проверяет данные перед изменениями
+func (m *MonitorCol) AddMonitor(newrule Monitor) error {
+	if len(newrule.desc) == 0 {
+		return errors.New("Название/описание правила слишком короткое.")
+	}
+	if len(newrule.msgSubject) == 0 {
+		return errors.New("Тема извещения слишком короткая.")
+	}
+	if len(newrule.msgBody) == 0 {
+		return errors.New("Текст извещения слишком короткий.")
+	}
+	if !ifPathExist(newrule.folder) {
+		return errors.New("Директория наблюдения указана неверно или не существует (" + newrule.folder + ").")
+	}
+	if len(newrule.sid) == 0 {
+		return errors.New("Не указан получатель извещения.")
+	}
+	if len(newrule.action) == 0 {
+		return errors.New("Должно быть указано хотябы одно действие.")
+	}
+	if len(newrule.mask) == 0 {
+		return errors.New("Должна быть указана хотябы одна файловая маска.")
+	}
+
+	for _, col := range m.collection {
+		if col.id != newrule.id {
+			continue
+		}
+		return errors.New("Правило с таким номером (" + strconv.Itoa(int(newrule.id)) + ") уже существует.")
+	}
+
+	m.collection = append(m.collection, newrule)
+	return nil
+}
+
+//Возвращает наибольший номер id для account
+func (m *MonitorCol) MaxID() uint64 {
+	var max uint64
+	for _, col := range m.collection {
+		if col.id < max {
+			continue
+		}
+		max = col.id
+	}
+	return max
+}
+
+//Удаляет правило с заданным id
+func (m *MonitorCol) RemoveColElm(id uint64) error {
+	if m.indexByID(id) == -1 {
+		return errors.New("Не удалось найти заданный элемент.")
+	}
+	m.collection = append(m.collection[:m.indexByID(id)], m.collection[m.indexByID(id) + 1:]...)
+	return nil
+}
+
+//Возвращает индекс правила монитора по его id
+//если не найдено = -1
+func (m *MonitorCol) indexByID(id uint64) (i int) {
+	for i = 0; i < len(m.collection); i++ {
+		if m.collection[i].id != id {
+			continue
+		}
+		return i
+	}
+	return -1 //не найдено
 }

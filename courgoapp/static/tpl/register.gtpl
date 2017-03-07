@@ -71,7 +71,7 @@ $('#savebutton').click(function () {
 $('#savebutton').prop('disabled', true);
 var data = $("#register-subscribers").serializeObject();
 data["post"]="SaveButton"
-alert(JSON.stringify(data));
+//alert(JSON.stringify(data));
 $.ajax({                 /* start ajax function to send data */
         url: "/acc/register",
         type: 'POST',

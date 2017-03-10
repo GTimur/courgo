@@ -27,9 +27,10 @@ type WebCtl struct {
 }
 
 type Page struct {
-	Title   string
-	Body    template.HTML
-	LnkHome string
+	Title    string
+	Body     template.HTML
+	LnkHome  string
+	SvcState template.HTML
 }
 
 var (
@@ -40,8 +41,11 @@ var (
 	register_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "register.gtpl")))
 	mon_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "mon.gtpl")))
 	monreg_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "monreg.gtpl")))
-)
+	monsvc_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "monsvc.gtpl")))
 
+	// Переменная сообщающая программе о необходимости при первой же возможности завершить работу.
+	WaitExit bool
+)
 
 //Функции установки значений
 func (w *WebCtl) SetHost(host net.IP) {
@@ -86,6 +90,7 @@ func (w *WebCtl) StartServe() (err error) {
 	http.HandleFunc("/acc/register", urlregister) //Страница регистрации подписчика
 	http.HandleFunc("/mon", urlmon) //Страница с таблицей правил монитора
 	http.HandleFunc("/mon/register", urlmonreg) //Страница создания правила монитора
+	http.HandleFunc("/mon/svc", urlmonsvc) //Страница управления обработчиком (вкл/выкл)
 	http.HandleFunc("/config", urlconfig) //Страница настройки приложения
 	go func() {
 		log.Fatal(manners.ListenAndServe(w.connString(), http.DefaultServeMux))
@@ -99,7 +104,7 @@ func urlhome(w http.ResponseWriter, r *http.Request) {
 	title := "COURIER GO"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome }
+	page := Page{title, template.HTML(body), lnkhome, "" }
 	if err := home_template.ExecuteTemplate(w, "main", page); err != nil {
 		log.Println(err.Error())
 		http.Error(w, http.StatusText(500), 500)
@@ -162,7 +167,7 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 	title := "Регистрация подписчика"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome}
+	page := Page{title, template.HTML(body), lnkhome, ""}
 	if r.Method == "GET" {
 		if err := register_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -236,7 +241,7 @@ func urlacc(w http.ResponseWriter, r *http.Request) {
 	title := "Подписчики рассылки (адресная книга)"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome}
+	page := Page{title, template.HTML(body), lnkhome, ""}
 	if r.Method == "GET" {
 		if err := acc_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -287,7 +292,7 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 	title := "Управление правилами монитора"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome}
+	page := Page{title, template.HTML(body), lnkhome, ""}
 	if r.Method == "GET" {
 		if err := mon_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -310,13 +315,13 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 
 		switch jh["Post"] {
 		case "RemoveButton" :
-			id,cerr := strconv.Atoi(jh["Id"])
-			if cerr!=nil{
+			id, cerr := strconv.Atoi(jh["Id"])
+			if cerr != nil {
 				enc := json.NewEncoder(w)
 				enc.Encode("Не удалось удалить указанное правило.")
 				break
 			}
-			if err:=GlobalMonCol.RemoveColElm(uint64(id));err!=nil{
+			if err := GlobalMonCol.RemoveColElm(uint64(id)); err != nil {
 				enc := json.NewEncoder(w)
 				enc.Encode("Не удалось удалить указанное правило.")
 				break
@@ -349,7 +354,7 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 	title := "Управление правилами монитора"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome}
+	page := Page{title, template.HTML(body), lnkhome, ""}
 	if r.Method == "GET" {
 		if err := monreg_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
@@ -436,6 +441,66 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+//Обработчик для /mon
+//Если в POST передан нужный код, то выполняется действие
+func urlmonsvc(w http.ResponseWriter, r *http.Request) {
+	title := "Управление правилами монитора"
+	body := ""
+	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
+	svcstate := `<h4><span class="label label-success">Выполняется</span></h4>в данный момент монитор выполняет регулярную проверку всех правил.`
+	if !MonSvcState {
+		svcstate = `<h4><span class="label label-danger">Остановлен</span></h4>в данный момент монитор остановлен.`
+	}
+	page := Page{title, template.HTML(body), lnkhome, template.HTML(svcstate)}
+	if r.Method == "GET" {
+		if err := monsvc_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}
+	} else {
+		dec := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		// Массив данных JSON для получения данных из формы (ajax)
+		// Первый элемент должен содержать код действия
+		type jsonPOSTData map[string]string
+
+		var jh jsonPOSTData
+
+		err := dec.Decode(&jh)
+		if err != nil {
+			log.Println("Handshake error: ", err)
+		}
+
+		enc := json.NewEncoder(w)
+		switch jh["Post"] {
+		case "DocumentReady" :
+			st := "StatusON"
+			if !MonSvcState {
+				st = "StatusOFF"
+			}
+			enc.Encode(st)
+		case "StopButton" :
+			MonSvcState = false
+			enc.Encode("StopOK")
+		case "StartButton" :
+			MonSvcState = true
+			enc.Encode("StartOK")
+		case "ShutdownButton":
+			enc.Encode("ShutOK")
+			// Завершаем работу приложения
+			WaitExit = true
+		default:
+			//Отправляем ответ на POST-запрос
+			//для предотвращения ошибки JSON parse error в ajax методе
+			enc.Encode("No action requested.")
+		}
+	}
+}
+
+
+
 //обработчик для /config
 func urlconfig(w http.ResponseWriter, r *http.Request) {
 	//var accnt Acc
@@ -443,7 +508,7 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 	title := "Настройка основных параметров"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	page := Page{title, template.HTML(body), lnkhome}
+	page := Page{title, template.HTML(body), lnkhome, ""}
 	if r.Method == "GET" {
 		if err := conf_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)

@@ -6,6 +6,8 @@
  	Код действия = 10
  	2. Распаковка архивных файлов с последующим вложением содержимого в письмо.
  	Код действия = 11
+ 	3. Исключить из обработки
+ 	Код действия = 1000
 */
 
 
@@ -21,24 +23,42 @@ import (
 	"io/ioutil"
 )
 
-//Запускает выполнение правил монитора по всему списку
-func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials) {
+// Переменная определяющая состояние обработчика правил монитора.
+var MonSvcState bool
+
+// Запускает выполнение правил монитора по всему списку
+// если state = false, тогда обработка не выполняется
+func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, state bool) error {
+	// Проверим состояние выключателя обработки (до начала работы)
+	if !state {
+		return nil
+	}
 	for _, r := range rules.collection {
 		fmt.Println("RULE ID = ", r.id, "MASK = ", r.mask)
 		now := time.Now()
 		// Проверим настал ли новый день для регистрации событий
 		if GlobalHist.IsNewDay(now) {
 			// Запишем все назаписанные события на диск
-			GlobalHist.Write()
+			if err:=GlobalHist.Write();err!=nil{
+				return err
+			}
 			// Сотрем из памяти программы историю о старых событиях
-			GlobalHist.CleanUntilDay(now)
+			if err:=GlobalHist.CleanUntilDay(now);err!=nil{
+				return err
+			}
 		}
+		// Проверим состояние выключателя обработки (для отключения во время работы)
+		if !MonSvcState{
+			return nil
+		}
+
 		// Запустим очередное правило
 		if r.id > 999 {
 			runRule(r, accbook, auth)
 		}
 	}
 	fmt.Println("StartMonitor: DONE.")
+	return nil
 }
 
 /*
@@ -209,6 +229,10 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				GlobalHist.Write()
 			}
 		} /* if code.id == 11 */
+
+		if code.id == 1000 {
+
+		} /* if code.id == 1000 */
 	}
 	return nil
 }

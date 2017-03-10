@@ -285,6 +285,3 @@ smtpport uint, user string, passwd string, emailfrom string, fromname string, us
 
 	return nil
 }
-
-
-//configrw := Config{PTKPSD{PathIN:"Y:\\test\\IN",PathOUT:"Y:\\test\\OUT"},managersrv{Addr:"127.0.0.1",Port:9090},}

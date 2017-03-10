@@ -23,9 +23,10 @@ ul {
   <p>Утилита уведомления о файловых событиях</p> 
 </div>
 <ul class="list-group">
-  <li class="list-group-item"><a href="http://127.0.0.1:8000/">Статистика работы программы</a></li>
-  <li class="list-group-item"><a href="http://127.0.0.1:8000/acc">Управление получателями рассылки</a></li>
-  <li class="list-group-item"><a href="http://127.0.0.1:8000/mon">Управление правилами монитора</a></li>
+  <li class="list-group-item"><a href="{{.LnkHome}}/">Статистика работы программы</a></li>
+  <li class="list-group-item"><a href="{{.LnkHome}}/acc">Управление получателями рассылки</a></li>
+  <li class="list-group-item"><a href="{{.LnkHome}}/mon">Управление правилами монитора</a></li>
+  <li class="list-group-item"><a href="{{.LnkHome}}/mon/svc">Управление обработчиком</a></li>
 </ul>
 {{end}}
 {{define "scripts"}}{{end}}

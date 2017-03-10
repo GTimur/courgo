@@ -4,49 +4,23 @@ import (
 	"fmt"
 	"github.com/Gtimur/courgo"
 	"net"
-	"bufio"
 	"os"
 	"log"
-	"time"
 	"strconv"
+	"time"
 )
 
 func main() {
 	var web courgo.WebCtl
 
+	/* Приветствие */
 	fmt.Println(courgo.BannerString)
 	if err := courgo.InitGlobal(); err != nil {
 		fmt.Println("Ошибка запуска программы: ", err)
 	}
-	fmt.Println("Web control configured: "+"http://" + courgo.GlobalConfig.ManagerSrvAddr() + ":" + strconv.Itoa(int(courgo.GlobalConfig.ManagerSrvPort())))
+	fmt.Println("Web control configured: " + "http://" + courgo.GlobalConfig.ManagerSrvAddr() + ":" + strconv.Itoa(int(courgo.GlobalConfig.ManagerSrvPort())))
 
-
-
-
-
-
-
-
-
-	/* CHECK ARCDIR */
-	courgo.GlobalArchi.SetDateNow()
-	courgo.GlobalArchi.SetTmp("Y:\\TEMP\\TMP")
-	courgo.GlobalArchi.SetSrc("Y:\\TEMP\\SRC")
-	courgo.GlobalArchi.SetDst("Y:\\TEMP\\TEST")
-
-	/*if err:=courgo.GlobalArchi.FullCopy(); err!=nil{
-		log.Println(err)
-	}*/
-
-	fmt.Println(courgo.ArcDir(time.Now()))
-	/****************/
-
-	courgo.StartMonitor(courgo.GlobalMonCol, courgo.GlobalBook, courgo.GlobalConfig.SMTPCred())
-
-
-
-
-	/*Запускаем сервер обслуживания "MENU"*/
+	/* Запускаем сервер обслуживания WebCtl */
 	web.SetHost(net.ParseIP(courgo.GlobalConfig.ManagerSrvAddr()))
 	web.SetPort(courgo.GlobalConfig.ManagerSrvPort())
 	err := web.StartServe()
@@ -54,12 +28,36 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	/*MENU stop*/
 
+	/* Запускаем обработчик правил монитора */
+	courgo.MonSvcState = false
+	ticker := time.NewTicker(time.Second * 1)
+	i := 0;
+	for _ = range ticker.C {
+		// Запускаем обработчик каждую минуту
+		if i != 60 {
+			i++
+			fmt.Println("tick", i)
+			if courgo.WaitExit {
+				time.Sleep(1 * time.Second)
+				break
+			}
+			continue
+		}
+		i = 0
+		for {
+			if err := courgo.StartMonitor(courgo.GlobalMonCol, courgo.GlobalBook, courgo.GlobalConfig.SMTPCred(), courgo.MonSvcState); err != nil {
+				log.Fatal("Ошибка: Не удалось запустить диспетчер правил.", err)
+			}
+		}
+	}
 
-	//Ожидаем ввода новой строки
-	reader := bufio.NewReader(os.Stdin)
-	reader.ReadString('\n')
-	fmt.Println()
+	ticker.Stop()
+
+	/* WebCtl stop */
 	web.Close() //stop web-server gently
+	if !courgo.WaitExit {
+		os.Exit(0)
+	}
+	log.Println("Работа программы была завершена по требованию пользователя.")
 }

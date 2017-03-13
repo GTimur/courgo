@@ -2,7 +2,7 @@
 package courgo
 
 const (
-	Version = "0.1"
+	Version = "0.2"
 	BannerString = "Courier Go notification utility. " + Version + " (C) 2017 UMK BANK (GTG)"
 )
 
@@ -11,11 +11,22 @@ func InitGlobal() error {
 
 	/* Экземпляр структуры для хранения настроек программы */
 	GlobalConfig.SetJSONFile("config.json")
-	//GlobalConfig.SetManagerSrv("127.0.0.1",9090)
-	//GlobalConfig.SetSMTPSrv("smtp.yandex.ru",465,"to-timur@yandex.ru","blank","to-timur@yandex.ru","Информатор GO",true)
 	if err := GlobalConfig.ReadJSON(); err != nil {
 		return err
 	}
+	/* Если конфига нет, создаем базовый */
+	if len(GlobalConfig.managerSrv.Addr) == 0 {
+		GlobalConfig.SetManagerSrv("127.0.0.1", 8000)
+		GlobalConfig.SetSMTPSrv("blank", 25, "enter@your.mail", "blank", "enter@noti.mail", "Информатор GO", false)
+		WriteJSONFile(&GlobalConfig)
+	}
+
+
+
+
+	//GlobalConfig.smtpSrv.Password="test"
+	//WriteJSONFile(&GlobalConfig)
+	//fmt.Println(GlobalConfig.smtpSrv.Password)
 
 	/* Мониторы */
 	GlobalMonCol.SetJSONFile("col.json")

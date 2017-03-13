@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"html/template"
 	"github.com/braintree/manners"
-	"path"
+	"github.com/GeertJohan/go.rice"
 	"strings"
 	"encoding/json"
 	"strconv"
@@ -35,16 +35,22 @@ type Page struct {
 
 var (
 	// компилируем шаблоны
-	conf_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "config.gtpl")))
-	home_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "index.gtpl")))
-	acc_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "acc.gtpl")))
-	register_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "register.gtpl")))
-	mon_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "mon.gtpl")))
-	monreg_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "monreg.gtpl")))
-	monsvc_template = template.Must(template.ParseFiles("main.gtpl", path.Join("static", "tpl", "monsvc.gtpl")))
+
+	/*conf_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "config.gtpl")))
+	home_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "index.gtpl")))
+	acc_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "acc.gtpl")))
+	register_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "register.gtpl")))
+	mon_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "mon.gtpl")))
+	monreg_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "monreg.gtpl")))
+	monsvc_template = template.Must(template.ParseFiles(path.Join("static", "tpl", "main.gtpl"), path.Join("static", "tpl", "monsvc.gtpl")))*/
+
 
 	// Переменная сообщающая программе о необходимости при первой же возможности завершить работу.
 	WaitExit bool
+	// Переменная для отображения инфорамации о том сколько времени осталось до очередного запуска мониторов.
+	TimeRemain int
+	// Интервал задающий частоту запуска правил монитора в секундах
+	Interval = 60
 )
 
 //Функции установки значений
@@ -79,8 +85,16 @@ func (w *WebCtl) Close() bool {
 //Может изменять accbook - справочник подписантов
 func (w *WebCtl) StartServe() (err error) {
 	// для отдачи сервером статичных файлов из папки public/static
-	fs := http.FileServer(http.Dir("./static/"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	//fs := http.FileServer(http.Dir("./static/"))
+	//http.Handle("/static/", http.StripPrefix("/static/", fs))
+	/* Добавил go.rice для объединения статических файлов в exe-шник */
+	box, err := rice.FindBox("static")
+	if err != nil {
+		log.Fatalln("go.rice embedding error: ", err)
+	}
+	cssFileServer := http.StripPrefix("/static/", http.FileServer(box.HTTPBox()))
+	http.Handle("/static/", cssFileServer)
 	http.HandleFunc("/gen/data/test.book", accbook) //Генерация JSON с данными подписчиков для таблицы
 	http.HandleFunc("/gen/data/acclist", accduallist) //Генерация JSON с данными подписчиков для duallist
 	http.HandleFunc("/gen/data/actslist", actsduallist) //Генерация JSON с данными действий для duallist
@@ -93,7 +107,7 @@ func (w *WebCtl) StartServe() (err error) {
 	http.HandleFunc("/mon/svc", urlmonsvc) //Страница управления обработчиком (вкл/выкл)
 	http.HandleFunc("/config", urlconfig) //Страница настройки приложения
 	go func() {
-		log.Fatal(manners.ListenAndServe(w.connString(), http.DefaultServeMux))
+		log.Fatalln(manners.ListenAndServe(w.connString(), http.DefaultServeMux))
 	}()
 	w.islisten = true
 	return err
@@ -105,10 +119,19 @@ func urlhome(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, "" }
-	if err := home_template.ExecuteTemplate(w, "main", page); err != nil {
+
+	/*GO.RICE*/
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/index.gtpl")
+	if err := tmplMessage.Execute(w, page); err != nil {
 		log.Println(err.Error())
 		http.Error(w, http.StatusText(500), 500)
 	}
+	/*GO.RICE*/
+
+	//if err := home_template.ExecuteTemplate(w, "main", page); err != nil {
+	//	log.Println(err.Error())
+	//	http.Error(w, http.StatusText(500), 500)
+	//}
 }
 
 //Обработчик запросов для /gen/data/actslist
@@ -168,11 +191,20 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, ""}
+
+	/*GO.RICE*/
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/register.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
-		if err := register_template.ExecuteTemplate(w, "main", page); err != nil {
-			log.Println(err)
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
+		/*if err := register_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}*/
 	} else {
 
 		err := r.ParseForm()
@@ -242,11 +274,20 @@ func urlacc(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, ""}
+
+	/*GO.RICE*/
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/acc.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
-		if err := acc_template.ExecuteTemplate(w, "main", page); err != nil {
-			log.Println(err)
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
+		/*if err := acc_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}*/
 	} else {
 		dec := json.NewDecoder(r.Body)
 		defer r.Body.Close()
@@ -293,11 +334,19 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, ""}
+	/*GO.RICE*/
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/mon.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
-		if err := mon_template.ExecuteTemplate(w, "main", page); err != nil {
-			log.Println(err)
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
+		/*if err := mon_template.ExecuteTemplate(w, "main", page); err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+		}*/
 	} else {
 		dec := json.NewDecoder(r.Body)
 		defer r.Body.Close()
@@ -355,11 +404,20 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, ""}
+	/*GO.RICE*/
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/monreg.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
+			http.Error(w, http.StatusText(500), 500)
+		}
+		/*if r.Method == "GET" {
 		if err := monreg_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
 			http.Error(w, http.StatusText(500), 500)
-		}
+		}*/
 	} else {
 		dec := json.NewDecoder(r.Body)
 		defer r.Body.Close()
@@ -448,16 +506,24 @@ func urlmonsvc(w http.ResponseWriter, r *http.Request) {
 	title := "Управление правилами монитора"
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
-	svcstate := `<h4><span class="label label-success">Выполняется</span></h4>в данный момент монитор выполняет регулярную проверку всех правил.`
+	svcstate := `<h4><span class="label label-success">Выполняется</span></h4>В данный момент обработчик правил монитора запущен и будет выполнять правила каждые ` + strconv.Itoa(Interval) + ` секунд.<Br>Обработчик выполнит запуск правил через ` + strconv.Itoa(TimeRemain) + ` секунд.`
 	if !MonSvcState {
 		svcstate = `<h4><span class="label label-danger">Остановлен</span></h4>в данный момент монитор остановлен.`
 	}
 	page := Page{title, template.HTML(body), lnkhome, template.HTML(svcstate)}
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/monsvc.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
+			http.Error(w, http.StatusText(500), 500)
+		}
+		/*if r.Method == "GET" {
 		if err := monsvc_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
 			http.Error(w, http.StatusText(500), 500)
-		}
+		}*/
 	} else {
 		dec := json.NewDecoder(r.Body)
 		defer r.Body.Close()
@@ -509,11 +575,18 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 	body := ""
 	lnkhome := "http://" + GlobalConfig.managerSrv.Addr + ":" + strconv.Itoa(int(GlobalConfig.managerSrv.Port))
 	page := Page{title, template.HTML(body), lnkhome, ""}
+	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/config.gtpl")
+	/*GO.RICE*/
+
 	if r.Method == "GET" {
+		if err := tmplMessage.Execute(w, page); err != nil {
+			log.Println(err.Error())
+			http.Error(w, http.StatusText(500), 500)
+		}/*	if r.Method == "GET" {
 		if err := conf_template.ExecuteTemplate(w, "main", page); err != nil {
 			log.Println(err)
 			http.Error(w, http.StatusText(500), 500)
-		}
+		}*/
 	} else {
 		dec := json.NewDecoder(r.Body)
 		defer r.Body.Close()
@@ -574,4 +647,33 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 			enc.Encode("/config - no actions required")
 		}
 	}
+}
+
+// Возвращает tmplMessage для gorice
+// сделано чисто для уменьшения текста.
+func goriceTmpl(box, tplfile1, tplfile2 string) *template.Template {
+	/*GO.RICE*/
+	// find/create a rice.Box
+	templateBox, err := rice.FindBox(box)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// get file contents as string
+	templateString, err := templateBox.String(tplfile1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// get file contents as string
+	templateString2, err := templateBox.String(tplfile2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	templateString += templateString2
+	// parse and execute the template
+	tmplMessage, err := template.New("main").Parse(templateString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return tmplMessage
+	/*GO.RICE*/
 }

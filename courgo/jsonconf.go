@@ -5,10 +5,12 @@ package courgo
 
 import (
 	"os"
-	"fmt"
 	"encoding/json"
 	"log"
 	"errors"
+	"fmt"
+	"strings"
+	"strconv"
 )
 
 type Config struct {
@@ -158,7 +160,7 @@ func (c *Config) readJSON() (err error) {
 	file, err := os.Open(c.jsonFile)
 	defer file.Close()
 	if err != nil {
-		log.Fatalf("Ошибка чтения JSON файла конфигурации: %v\n", err)
+		log.Printf("Ошибка чтения JSON файла конфигурации: %v\n", err)
 		return err
 	}
 
@@ -169,9 +171,32 @@ func (c *Config) readJSON() (err error) {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&jsonConfig)
 	if err != nil {
-		fmt.Errorf("JSON decoder error: %v", err)
-		//return err
+		log.Printf("JSON decoder error: %v", err)
+		return err
 	}
+
+	var aeserr error
+	encStr := strings.Split(jsonConfig.SMTPSrv.Password, "*")
+
+	var encBytes []byte
+	b := 0
+	for _, elm := range encStr {
+		if len(elm) == 0 {
+			continue
+		}
+		b, err = strconv.Atoi(elm)
+		if err != nil {
+			break
+		}
+		encBytes = append(encBytes, byte(b))
+	}
+
+	jsonConfig.SMTPSrv.Password, aeserr = AesDecript(encBytes)
+	if aeserr != nil {
+		log.Println(aeserr)
+		return aeserr
+	}
+
 	c.jsonFile = jsonConfig.JSONFile
 	c.tmpDir = jsonConfig.TempDir
 	c.managerSrv = jsonConfig.ManagerSrv
@@ -193,7 +218,7 @@ func (c *Config) writeJSON() (err error) {
 	file, err := os.OpenFile(c.jsonFile, os.O_RDWR, 0644)
 	defer file.Close()
 	if err != nil {
-		log.Fatalf("Ошибка открытия для записи JSON файла конфигурации: %v\n", err)
+		log.Printf("Ошибка открытия для записи JSON файла конфигурации: %v\n", err)
 		return err
 	}
 
@@ -204,14 +229,27 @@ func (c *Config) writeJSON() (err error) {
 		SMTPSrv: c.smtpSrv,
 		TempDir: c.tmpDir,
 	}
+	var aeserr error
+	// Зашифруем строку пароля
+	var encBytes []byte
+	encBytes, aeserr = AesEncrypt(jsonConfig.SMTPSrv.Password)
+	if aeserr != nil {
+		return aeserr
+	}
+
+	str := ""
+	for i := range encBytes {
+		str += fmt.Sprintf("%d*", encBytes[i])
+	}
+
+	jsonConfig.SMTPSrv.Password = str
 
 	// пишем в файл
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "\t")
 	err = encoder.Encode(&jsonConfig)
 	if err != nil {
-		log.Fatalf("JSON encoder error: %v", err)
-		//return err
+		log.Printf("JSON encoder error: %v", err)
 	}
 	return err
 }

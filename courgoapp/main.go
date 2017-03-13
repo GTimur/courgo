@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 	"time"
+	"github.com/GeertJohan/go.rice"
 )
 
 func main() {
@@ -20,10 +21,15 @@ func main() {
 	}
 	fmt.Println("Web control configured: " + "http://" + courgo.GlobalConfig.ManagerSrvAddr() + ":" + strconv.Itoa(int(courgo.GlobalConfig.ManagerSrvPort())))
 
+	_, err := rice.FindBox("static")
+	if err != nil {
+		log.Fatalln("go.rice embedding error: ", err)
+	}
+
 	/* Запускаем сервер обслуживания WebCtl */
 	web.SetHost(net.ParseIP(courgo.GlobalConfig.ManagerSrvAddr()))
 	web.SetPort(courgo.GlobalConfig.ManagerSrvPort())
-	err := web.StartServe()
+	err = web.StartServe()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -35,9 +41,10 @@ func main() {
 	i := 0;
 	for _ = range ticker.C {
 		// Запускаем обработчик каждую минуту
-		if i != 60 {
+		if i != courgo.Interval {
 			i++
-			fmt.Println("tick", i)
+			courgo.TimeRemain = courgo.Interval - i
+			//fmt.Println("tick", i)
 			if courgo.WaitExit {
 				time.Sleep(1 * time.Second)
 				break
@@ -45,10 +52,8 @@ func main() {
 			continue
 		}
 		i = 0
-		for {
-			if err := courgo.StartMonitor(courgo.GlobalMonCol, courgo.GlobalBook, courgo.GlobalConfig.SMTPCred(), courgo.MonSvcState); err != nil {
-				log.Fatal("Ошибка: Не удалось запустить диспетчер правил.", err)
-			}
+		if err := courgo.StartMonitor(courgo.GlobalMonCol, courgo.GlobalBook, courgo.GlobalConfig.SMTPCred(), courgo.MonSvcState); err != nil {
+			log.Fatal("Ошибка: Не удалось запустить диспетчер правил.", err)
 		}
 	}
 

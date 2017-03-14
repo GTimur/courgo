@@ -28,14 +28,14 @@ func SendEmailMsg(authCreds EmailCredentials, msg *Message) error {
 	//Отправка без TLS
 	if !authCreds.UseTLS {
 		if err := SendMail(authCreds.Server, uint(authCreds.Port), auth, msg); err != nil {
-			log.Println(err)
+			log.Println("SendEmailMsg error:",err)
 			return err
 		}
 		return nil
 	}
 	//Отправка с TLS
 	if err := SendMailSSL(authCreds.Server, uint(authCreds.Port), auth, msg); err != nil {
-		log.Println(err)
+		log.Println("SendEmailMsgSSL error:",err)
 		return err
 	}
 	return nil

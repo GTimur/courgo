@@ -231,7 +231,7 @@ func (m *MonitorCol) dumpJSON() (*bytes.Buffer, error) {
 	encoder.SetIndent("", "\t")
 	err := encoder.Encode(&col)
 	if err != nil {
-		log.Println(err)
+		log.Println("MonitorCol dumpJSON error:", err)
 		return buffer, err
 	}
 	return buffer, err
@@ -267,12 +267,12 @@ func (m *MonitorCol) readJSON() (err error) {
 func (m *MonitorCol) writeJSON() (err error) {
 	buffer, err := m.dumpJSON()
 	if err != nil {
-		log.Println(err)
+		log.Println("MonitorCol writeJSON error:", err)
 		return err
 	}
 	err = ioutil.WriteFile(m.jsonFile, buffer.Bytes(), 0644)
 	if err != nil {
-		log.Println(err)
+		log.Println("MonitorCol writeJSON error:", err)
 		return err
 	}
 	return err
@@ -280,19 +280,50 @@ func (m *MonitorCol) writeJSON() (err error) {
 
 // Выполняет возврат JSON только для collection
 func (m *MonitorCol) StringJSON() (string, error) {
-	var col []monitorJSON
-	//Копируем данные JSON структуры в m
+	// создадим аналог структуры но вместо Sid будем
+	// хранить имя и номер подписчика
+	type monJSONm struct {
+		Id     uint64
+		Desc   string
+		Folder string
+		Mask   []string
+		Sid    []string
+		Action []actionJSON
+	}
+	var col  []monitorJSON
+	var colm monJSONm
+	var colmJSON []monJSONm
+
+	//Копируем данные JSON структуры m
 	for _, elem := range m.collection {
 		col = append(col, elem.monToMonJSON())
 	}
+
+	for _, elem := range col {
+		colm.Id = elem.Id
+		colm.Desc = elem.Desc
+		colm.Folder = elem.Folder
+		colm.Action = append(colm.Action, elem.Action...)
+		colm.Mask = append(colm.Mask, elem.Mask...)
+
+		for _, item := range elem.Sid {
+			elm := strconv.Itoa(int(item)) + " " + GlobalBook.account[GlobalBook.indexByID(item)].name
+			colm.Sid = append(colm.Sid, elm)
+		}
+		colmJSON = append(colmJSON, colm)
+		colm.Action = []actionJSON{}
+		colm.Mask = []string{}
+		colm.Sid = []string{}
+	}
+
 	//Буфер для записи строки результата
 	//удовлетворяет io.Writer
 	buffer := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buffer)
 	encoder.SetIndent("", "\t")
-	err := encoder.Encode(&col)
+	err := encoder.Encode(&colmJSON)
 	if err != nil {
-		log.Println(err)
+		log.Println("MonitorCol StringJSON error:", err)
 		return buffer.String(), err
 	}
 	return buffer.String(), err
@@ -349,7 +380,7 @@ func (m *Monitor) dumpJSON() (*bytes.Buffer, error) {
 	encoder.SetIndent("", "\t")
 	err := encoder.Encode(&mon)
 	if err != nil {
-		log.Println(err)
+		log.Println("Monitor dumpJSON error:", err)
 		return buffer, err
 	}
 	return buffer, err
@@ -403,12 +434,12 @@ func (m *Monitor) ReadJSON() (err error) {
 func (m *Monitor) writeJSON() (err error) {
 	buffer, err := m.dumpJSON()
 	if err != nil {
-		log.Println(err)
+		log.Println("Monitor writeJSON error:", err)
 		return err
 	}
 	err = ioutil.WriteFile(m.jsonFile, buffer.Bytes(), 0644)
 	if err != nil {
-		log.Println(err)
+		log.Println("Monitor writeJSON error:", err)
 		return err
 	}
 	return err

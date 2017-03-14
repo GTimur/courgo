@@ -19,11 +19,12 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"fmt"
+	"encoding/json"
 )
 
 type Hist struct {
 	Filename string
+	JSONfile string
 	Events   []Event
 }
 
@@ -48,6 +49,10 @@ func (h *Hist) SetFilename(filename string) {
 	h.Filename = filename
 }
 
+func (h *Hist) SetJSONFile(filename string) {
+	h.JSONfile = filename
+}
+
 func (h *Hist) AddEvt(Date time.Time, RuleID uint64, ActType uint64, Mask string, Completed bool, File string, Rcpt []string) {
 	evt := Event{Date:Date, RuleID:RuleID, ActType:ActType, Mask:Mask, Completed:Completed, File:File, Rcpt:Rcpt}
 	h.Events = append(h.Events, evt)
@@ -63,6 +68,74 @@ func (h *Hist) MakeHistFile() (err error) {
 	}
 	file, err := os.Create(h.Filename)
 	defer file.Close()
+	return err
+}
+
+
+// Создает новый файл для записи файла истории JSON
+func (h *Hist) RewriteJSONFile() (err error) {
+	if _, err = os.Stat(h.Filename); err == nil {
+		//Файл существует и будет перезаписан
+	}
+	file, err := os.Create(h.Filename)
+	defer file.Close()
+	return err
+}
+
+//Создает новый файл для записи файла истории
+//если таковой отсутствует (не перезаписывает его)
+func (h *Hist) MakeJSONFile() (err error) {
+	if _, err = os.Stat(h.JSONfile); err == nil {
+		//Файл существует и не будет перезаписан
+		//fmt.Println(os.IsExist(err),err)
+		return err
+	}
+	file, err := os.Create(h.JSONfile)
+	defer file.Close()
+	return err
+}
+
+func (h *Hist) readJSON() (err error) {
+	file, err := os.Open(h.JSONfile)
+	defer file.Close()
+	if err != nil {
+		log.Printf("HIST: Ошибка чтения JSON файла истории: %v\n", err)
+		return err
+	}
+	var evts []Event
+	//Читаем файл JSON
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&evts)
+	if err != nil {
+		log.Printf("HIST: JSON decoder error: %v", err)
+		return err
+	}
+	h.Events = append(h.Events, evts...)
+	return err
+}
+
+func (h *Hist)ReadJSON() (err error) {
+	err = h.readJSON()
+	return
+}
+
+func (h *Hist) writeJSON() (err error) {
+	file, err := os.OpenFile(h.JSONfile, os.O_RDWR, 0644)
+	defer file.Close()
+	if err != nil {
+		log.Printf("HIST Ошибка открытия для записи JSON файла истории: %v\n", err)
+		return err
+	}
+
+	var evts []Event
+	evts = append(evts, h.Events...)
+	// пишем в файл
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(&evts)
+	if err != nil {
+		log.Printf("HIST: JSON encoder error: %v", err)
+	}
 	return err
 }
 
@@ -106,12 +179,11 @@ func (h *Hist) Write() (err error) {
 	for i, ln := range hst {
 		_, err := file.WriteString(ln)
 		if err != nil {
-			log.Printf("Ошибка записи файла истории: %v\n", err)
+			log.Printf("HIST: Ошибка записи файла истории: %v\n", err)
 			return err
 		}
 		h.Events[i].IsWritten = true
 	}
-
 	return err
 }
 
@@ -127,7 +199,7 @@ func (h *Hist) IsEventExist(Date time.Time, RuleID uint64, ActType uint64, File 
 		if strings.Compare(evt.File, File) != 0 || evt.RuleID != RuleID || evt.ActType != ActType {
 			continue
 		}
-		fmt.Println("Event already exist.")
+		//fmt.Println("Event already exist.")
 		return true
 	}
 	return false
@@ -153,6 +225,13 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 	return nil
 }
 
+// Удаляет всю историю из памяти.
+func (h *Hist) CleanAll() {
+	for i := range h.Events {
+		h.Events = append(h.Events[:i], h.Events[i + 1:]...)
+	}
+}
+
 // Проверяет настал ли новый операционный день.
 // Если последнее событие было до начала текущего дня - новый день настал.
 func (h *Hist) IsNewDay(Day time.Time) bool {
@@ -165,4 +244,21 @@ func (h *Hist) IsNewDay(Day time.Time) bool {
 	}
 	// Последнее событие датировано РАНЬШЕ начала текущего дня
 	return true
+}
+
+func (h *Hist) RewriteDumpJSON() error {
+	/* фиксируем изменения так же в файле истории JSON */
+	if len(h.Events) == 0 {
+		return nil
+	}
+	if err := GlobalHist.RewriteJSONFile(); err != nil {
+		log.Printf("HIST DUMP: Ошибка перезаписи файла истории JSON: %v\n", err)
+		return err
+
+	}
+	if err := WriteJSONFile(h); err != nil {
+		log.Printf("HIST DUMP: Ошибка записи файла истории JSON: %v\n", err)
+		return err
+	}
+	return nil
 }

@@ -6,21 +6,22 @@
  	Код действия = 10
  	2. Распаковка архивных файлов с последующим вложением содержимого в письмо.
  	Код действия = 11
- 	3. Исключить из обработки
+ 	3. Не прикреплять вложение к письму, только уведомление
+ 	Код действия = 20
+ 	4. Исключить из обработки
  	Код действия = 1000
 */
-
 
 package courgo
 
 import (
 	"os"
 	"log"
-	"fmt"
 	"path/filepath"
 	"errors"
 	"time"
 	"io/ioutil"
+	"fmt"
 )
 
 // Переменная определяющая состояние обработчика правил монитора.
@@ -34,30 +35,32 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, 
 		return nil
 	}
 	for _, r := range rules.collection {
-		fmt.Println("RULE ID = ", r.id, "MASK = ", r.mask)
 		now := time.Now()
+		// Временно пусть это тут побудет (сдвиг на 3 часа)
+		now = now.Add(-3 * time.Hour)
 		// Проверим настал ли новый день для регистрации событий
 		if GlobalHist.IsNewDay(now) {
 			// Запишем все назаписанные события на диск
-			if err:=GlobalHist.Write();err!=nil{
+			if err := GlobalHist.Write(); err != nil {
 				return err
 			}
 			// Сотрем из памяти программы историю о старых событиях
-			if err:=GlobalHist.CleanUntilDay(now);err!=nil{
+			if err := GlobalHist.CleanUntilDay(now); err != nil {
 				return err
 			}
 		}
 		// Проверим состояние выключателя обработки (для отключения во время работы)
-		if !MonSvcState{
+		if !MonSvcState {
 			return nil
 		}
-
+		//fmt.Println("DIAG:", r.id, r.mask, r.sid)
 		// Запустим очередное правило
-		if r.id > 999 {
-			runRule(r, accbook, auth)
+		if r.id > 0 {
+			if err := runRule(r, accbook, auth); err != nil {
+				//fmt.Println("StartMonitor:", err)
+			}
 		}
 	}
-	fmt.Println("StartMonitor: DONE.")
 	return nil
 }
 
@@ -91,16 +94,10 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//Поиск файлов согласно масок, указнных в правиле монитора
 	files := findFiles(rule.folder, rule.mask)
 	if len(files) == 0 {
-		return errors.New("Файлы указанные в правиле не найдены")
+		return errors.New("Поиск файлов: Файлы указанные в правиле не найдены")
 	}
-	//fmt.Println(fl)
-	//fmt.Println(uid)
-
-	/*Выполнение действия согласно списка действий action
-	//Обработка кодов действий
-	//10 = отправить найденные вложения по email, с указанием subject и body в сообщении.
-	*/
-
+	// fmt.Println(files, rule.mask)
+	// fmt.Println(uid)
 
 	// Создадим временную директорию для различных нужд
 	dir, err := ioutil.TempDir(GlobalArchi.tmp, "monsvc")
@@ -147,7 +144,6 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				//Уберем повторения адресов если таковые случатся
 				msg.To = Dedup(msg.To)
 			}
-
 			// Отправим сообщение
 			if err := SendEmailMsg(auth, msg); err != nil {
 				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
@@ -157,6 +153,7 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			for name, mask := range files {
 				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 			}
+			fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
 			// Записываем имеющуюся несохранненную историю на диск
 			GlobalHist.Write()
 		} /* if code.id == 10 */
@@ -225,13 +222,61 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				for name, mask := range funarc {
 					GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 				}
+				fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
 				// Записываем имеющуюся несохранненную историю на диск
 				GlobalHist.Write()
 			}
 		} /* if code.id == 11 */
 
-		if code.id == 1000 {
+		//Код 20 = отправка email уведомления без вложений
+		if code.id == 20 {
+			// Убедимся что по данному файлу данным правилом не выполнялось действий
+			now := time.Now()
+			for name := range files {
+				if GlobalHist.IsEventExist(now, rule.id, code.id, name) {
+					// иначе - удалим его из списка
+					if len(files) == 0 {
+						return errors.New("Файлы указанные в правиле не найдены")
+					}
+					delete(files, name)
+					continue
+				}
+			}
+			if len(files) == 0 {
+				return errors.New("Файлы указанные в правиле не найдены")
+			}
+			//создадим новое извещение
+			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
 
+			//добавим всех получателей правила, для
+			//которых нашлись записи в адресной книге в получатели сообщений
+			for k := range uid {
+				if !uid[k] {
+					continue
+				}
+				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
+				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				//Уберем повторения адресов если таковые случатся
+				msg.To = Dedup(msg.To)
+			}
+
+			// Отправим сообщение
+			if err := SendEmailMsg(auth, msg); err != nil {
+				log.Println("Ошибка отправки сообщения для \"", msg.To, "\":", err)
+				return err
+			}
+			// Добавим в историю события об обработке для каждого файла
+			for name, mask := range files {
+				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
+			}
+			fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
+			// Записываем имеющуюся несохранненную историю на диск
+			GlobalHist.Write()
+		} /* if code.id == 20 */
+
+
+		if code.id == 1000 {
+			fmt.Println("Completed: RULE ", rule.id)
 		} /* if code.id == 1000 */
 	}
 	return nil

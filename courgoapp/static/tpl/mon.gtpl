@@ -60,6 +60,7 @@
                 <th data-field="Folder">Папка</th>
 				<th data-field="Mask" data-formatter="arrayStringFormatter">Маска</th>
 				<th data-field="Action" data-formatter="actionStringFormatter">Действия</th>
+				<th data-field="Sid" data-formatter="arrayStringFormatter">Получатели</th>
             </tr>
     </thead>   
 </table>		</div>

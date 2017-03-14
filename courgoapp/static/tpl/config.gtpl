@@ -27,7 +27,7 @@
     <form method="post" id="EditConfig" action="javascript:void(null);">
 	 <div class="form-group ">
       <label class="control-label " for="temp-dir">
-       Адрес сервера web-интерфейса управления
+       Каталог для временных файлов
       </label>
       <input class="form-control" id="temp-dir" name="temp-dir" placeholder="C:\TMP" type="text"/>
       <span class="help-block" id="hint_temp-dir">

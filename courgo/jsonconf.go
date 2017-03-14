@@ -193,7 +193,7 @@ func (c *Config) readJSON() (err error) {
 
 	jsonConfig.SMTPSrv.Password, aeserr = AesDecript(encBytes)
 	if aeserr != nil {
-		log.Println(aeserr)
+		log.Println("readJSON decript error:",aeserr)
 		return aeserr
 	}
 

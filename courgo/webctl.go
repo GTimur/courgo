@@ -108,7 +108,7 @@ func (w *WebCtl) StartServe() (err error) {
 	http.HandleFunc("/mon/svc", urlmonsvc) //Страница управления обработчиком (вкл/выкл)
 	http.HandleFunc("/config", urlconfig) //Страница настройки приложения
 	go func() {
-		log.Fatalln("WebCtl:",manners.ListenAndServe(w.connString(), http.DefaultServeMux))
+		log.Fatalln("WebCtl:", manners.ListenAndServe(w.connString(), http.DefaultServeMux))
 	}()
 	w.islisten = true
 	return err
@@ -124,7 +124,7 @@ func urlhome(w http.ResponseWriter, r *http.Request) {
 	/*GO.RICE*/
 	tmplMessage := goriceTmpl("static", "tpl/main.gtpl", "tpl/index.gtpl")
 	if err := tmplMessage.Execute(w, page); err != nil {
-		log.Println("Template error:",err.Error())
+		log.Println("Template error:", err.Error())
 		http.Error(w, http.StatusText(500), 500)
 	}
 	/*GO.RICE*/
@@ -139,7 +139,7 @@ func urlhome(w http.ResponseWriter, r *http.Request) {
 //Генерирует список доступных действий (actions) формате JSON для передачи в duallist
 //моделирует работу с файлом
 func actsduallist(w http.ResponseWriter, r *http.Request) {
-	data := "["+"\"10:Отправить как вложение\",\"11:Отправить содержимое архива\",\"20:Только уведомить(без вложения)\",\"1000:Не обрабатывать\""+"]"
+	data := "[" + "\"10:Отправить как вложение\",\"11:Отправить содержимое архива\",\"20:Только уведомить(без вложения)\",\"1000:Не обрабатывать\"" + "]"
 	fmt.Fprint(w, data)
 }
 
@@ -199,7 +199,7 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
 		/*if err := register_template.ExecuteTemplate(w, "main", page); err != nil {
@@ -210,7 +210,7 @@ func urlregister(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
-			log.Println("Form parse error:",err)
+			log.Println("Form parse error:", err)
 		}
 
 		if strings.Contains(r.Form.Encode(), "cancelbutton") {
@@ -282,7 +282,7 @@ func urlacc(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
 		/*if err := acc_template.ExecuteTemplate(w, "main", page); err != nil {
@@ -341,7 +341,7 @@ func urlmon(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
 		/*if err := mon_template.ExecuteTemplate(w, "main", page); err != nil {
@@ -411,7 +411,7 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
 		/*if r.Method == "GET" {
@@ -444,9 +444,9 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 				id:GlobalMonCol.MaxID() + 1,
 				desc:jh.RuleName,
 				folder:jh.RuleDir,
-				mask:strings.Split(strings.Replace(jh.RuleMask,", ",",",-1),","),
+				mask:strings.Split(strings.Replace(jh.RuleMask, ", ", ",", -1), ","),
 				msgSubject:jh.MsgSubj,
-				msgBody:jh.MsgBody,
+				msgBody:strings.Replace(jh.MsgBody, "\r\n", "<br>", -1),
 			}
 			var id int
 			var err error
@@ -517,7 +517,7 @@ func urlmonsvc(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}
 		/*if r.Method == "GET" {
@@ -581,7 +581,7 @@ func urlconfig(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		if err := tmplMessage.Execute(w, page); err != nil {
-			log.Println("Template error:",err.Error())
+			log.Println("Template error:", err.Error())
 			http.Error(w, http.StatusText(500), 500)
 		}/*	if r.Method == "GET" {
 		if err := conf_template.ExecuteTemplate(w, "main", page); err != nil {
@@ -657,23 +657,23 @@ func goriceTmpl(box, tplfile1, tplfile2 string) *template.Template {
 	// find/create a rice.Box
 	templateBox, err := rice.FindBox(box)
 	if err != nil {
-		log.Fatal("goriceTmpl error:",err)
+		log.Fatal("goriceTmpl error:", err)
 	}
 	// get file contents as string
 	templateString, err := templateBox.String(tplfile1)
 	if err != nil {
-		log.Fatal("goriceTmpl error:",err)
+		log.Fatal("goriceTmpl error:", err)
 	}
 	// get file contents as string
 	templateString2, err := templateBox.String(tplfile2)
 	if err != nil {
-		log.Fatal("goriceTmpl error:",err)
+		log.Fatal("goriceTmpl error:", err)
 	}
 	templateString += templateString2
 	// parse and execute the template
 	tmplMessage, err := template.New("main").Parse(templateString)
 	if err != nil {
-		log.Fatal("goriceTmpl error:",err)
+		log.Fatal("goriceTmpl error:", err)
 	}
 	return tmplMessage
 	/*GO.RICE*/

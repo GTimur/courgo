@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"encoding/json"
+	"fmt"
 )
 
 type Hist struct {
@@ -212,24 +213,40 @@ func BeginOfDay(t time.Time) time.Time {
 
 // Удаляет всю историю из памяти до 0 часов указаннго дня Day.
 func (h *Hist) CleanUntilDay(Day time.Time) error {
-	for i, evt := range h.Events {
-		if !evt.Date.Before(BeginOfDay(Day)) {
-			continue
+	complete := false
+	for !complete {
+		for i, evt := range h.Events {
+			fmt.Println(len(h.Events), i)
+			if !evt.Date.Before(BeginOfDay(Day)) {
+				continue
+			}
+			// Удалим событие из списка если его дата меньше указанной
+			if len(h.Events) == 0 {
+				complete = true
+				continue
+				//return nil // нет данных для обработки
+			}
+			if len(h.Events) == 1 {
+				h.Events = h.Events[:len(h.Events) - 1]
+				complete = true
+				continue
+			}
+			h.Events = append(h.Events[:i], h.Events[i + 1:]...)
+			break
 		}
-		// Удалим событие из списка если его дата меньше указанной
-		if len(h.Events) == 0 {
-			return nil // нет данных для обработки
-		}
-		h.Events = append(h.Events[:i], h.Events[i + 1:]...)
 	}
 	return nil
 }
 
 // Удаляет всю историю из памяти.
-func (h *Hist) CleanAll() {
-	for i := range h.Events {
-		h.Events = append(h.Events[:i], h.Events[i + 1:]...)
+func (h *Hist) CleanAll() error {
+	if len(h.Events) == 0 {
+		return nil
 	}
+	for range h.Events {
+		h.Events = h.Events[:len(h.Events) - 1]
+	}
+	return nil
 }
 
 // Проверяет настал ли новый операционный день.

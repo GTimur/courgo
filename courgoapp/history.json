@@ -1,0 +1,122 @@
+[
+	{
+		"Date": "2017-03-14T15:15:11.4376235+03:00",
+		"RuleID": 10,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*0m*001.830",
+		"File": "K:\\post\\elo\\out\\@@20170314093000674000@0mviu001.830",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T15:22:01.5516308+03:00",
+		"RuleID": 11,
+		"ActType": 11,
+		"Completed": true,
+		"Mask": "*.rar",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314104500649000@9002.rar",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T15:22:01.5516308+03:00",
+		"RuleID": 11,
+		"ActType": 11,
+		"Completed": true,
+		"Mask": "*",
+		"File": "C:\\Users\\Galutvo\\AppData\\Local\\Temp\\monsvc577078598\\3042.ARJ",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T15:22:01.5516308+03:00",
+		"RuleID": 11,
+		"ActType": 11,
+		"Completed": true,
+		"Mask": "*",
+		"File": "C:\\Users\\Galutvo\\AppData\\Local\\Temp\\monsvc577078598\\9002.PDF",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T16:56:00.529538+03:00",
+		"RuleID": 13,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*.pdf",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314093011065000@OD637.pdf",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T16:56:00.529538+03:00",
+		"RuleID": 13,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*.pdf",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314093011097000@OD638.pdf",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": true
+	},
+	{
+		"Date": "2017-03-14T16:56:00.529538+03:00",
+		"RuleID": 13,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*.pdf",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314093011123000@OD640.pdf",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": false
+	},
+	{
+		"Date": "2017-03-14T16:56:00.529538+03:00",
+		"RuleID": 13,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*.pdf",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314093011158000@OD641.pdf",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": false
+	},
+	{
+		"Date": "2017-03-14T16:56:00.529538+03:00",
+		"RuleID": 13,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*.pdf",
+		"File": "K:\\POST\\ELO\\OUT\\@@20170314163000118000@9038.pdf",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": false
+	},
+	{
+		"Date": "2017-03-14T16:59:11.9376769+03:00",
+		"RuleID": 10,
+		"ActType": 10,
+		"Completed": true,
+		"Mask": "*0m*001.830",
+		"File": "K:\\post\\elo\\out\\@@@0mt001.830",
+		"Rcpt": [
+			"gtg@ymkbank.ru"
+		],
+		"IsWritten": false
+	}
+]

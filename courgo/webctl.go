@@ -444,7 +444,7 @@ func urlmonreg(w http.ResponseWriter, r *http.Request) {
 				id:GlobalMonCol.MaxID() + 1,
 				desc:jh.RuleName,
 				folder:jh.RuleDir,
-				mask:strings.Split(strings.Replace(jh.RuleMask, ", ", ",", -1), ","),
+				mask:strings.Split(strings.TrimRight(strings.Replace(jh.RuleMask, ", ", ",", -1)," "), ","),
 				msgSubject:jh.MsgSubj,
 				msgBody:strings.Replace(jh.MsgBody, "\r\n", "<br>", -1),
 			}

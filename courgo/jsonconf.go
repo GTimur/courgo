@@ -275,6 +275,41 @@ func WriteJSONFile(data readerWriterJSON) error {
 	return err
 }
 
+//Интерфейсная функция записи данных в формате JSON в файл
+//путь для файла будет взят из поля JSONFile структуры
+func (c *Config) SelfChek() error {
+	// Если директории не существует
+	if _, err := os.Stat(c.tmpDir); os.IsNotExist(err) {
+		return errors.New("ConfigInit:Временный каталог tempdir не существует.")
+	}
+	if len(c.jsonFile) < 1 {
+		return errors.New("ConfigInit:Имя jsonfile слишком короткое.")
+	}
+	if len(c.managerSrv.Addr) < 1 {
+		return errors.New("ConfigInit:Адрес webaddr указан неверно.")
+	}
+	if c.managerSrv.Port <= 1024 {
+		return errors.New("ConfigInit:Порт webport должен быть в пределах 1025-65535.")
+	}
+	if len(c.smtpSrv.Addr) < 1 {
+		return errors.New("ConfigInit:Адрес smtpaddr указан неверно.")
+	}
+	if c.smtpSrv.Port <= 1 {
+		return errors.New("ConfigInit:Порт smtpport указан неверно.")
+	}
+	if len(c.smtpSrv.FromName) < 1 {
+		return errors.New("ConfigInit:Имя отправителя писем заполнено неверно.")
+	}
+	if len(c.smtpSrv.Account) < 1 {
+		return errors.New("ConfigInit:Email адрес от имени которого ведется рассылка заполнен неверно.")
+	}
+	if len(c.smtpSrv.From) == 0 {
+		return errors.New("ConfigInit:Адрес emailfrom не может быть пустым.")
+	}
+	return nil
+}
+
+
 // Инициализация переменной Config и проверка
 // параметров на ошибки
 func (c *Config) ConfigInit(jsonfile string, tempdir, webaddr string, webport uint16, smtpaddr string,

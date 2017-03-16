@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"encoding/json"
-	"fmt"
 )
 
 type Hist struct {
@@ -74,14 +73,27 @@ func (h *Hist) MakeHistFile() (err error) {
 
 
 // Создает новый файл для записи файла истории JSON
-func (h *Hist) RewriteJSONFile() (err error) {
-	if _, err = os.Stat(h.Filename); err == nil {
+func (h *Hist) TruncJSONFile() (err error) {
+	if _, err = os.Stat(h.JSONfile); err == nil {
 		//Файл существует и будет перезаписан
 	}
-	file, err := os.Create(h.Filename)
+	file, err := os.Create(h.JSONfile)
 	defer file.Close()
 	return err
 }
+
+// Создает новый файл для записи файла истории JSON
+func (h *Hist) RewriteJSON() (err error) {
+	if err := h.TruncJSONFile(); err != nil {
+		return err
+	}
+	if err := WriteJSONFile(h); err != nil {
+		return err
+	}
+	return err
+}
+
+
 
 //Создает новый файл для записи файла истории
 //если таковой отсутствует (не перезаписывает его)
@@ -214,9 +226,23 @@ func BeginOfDay(t time.Time) time.Time {
 // Удаляет всю историю из памяти до 0 часов указаннго дня Day.
 func (h *Hist) CleanUntilDay(Day time.Time) error {
 	complete := false
+
+	// Проверим есть ли подходящие события для обработки
+	for _, evt := range h.Events {
+		if !evt.Date.Before(BeginOfDay(Day)) {
+			continue
+		}
+		complete = true
+	}
+	if !complete {
+		return nil
+	}
+
+	// Очищаем историю
+	complete = false
 	for !complete {
 		for i, evt := range h.Events {
-			fmt.Println(len(h.Events), i)
+			//fmt.Println(len(h.Events), i)
 			if !evt.Date.Before(BeginOfDay(Day)) {
 				continue
 			}
@@ -268,7 +294,7 @@ func (h *Hist) RewriteDumpJSON() error {
 	if len(h.Events) == 0 {
 		return nil
 	}
-	if err := GlobalHist.RewriteJSONFile(); err != nil {
+	if err := GlobalHist.RewriteJSON(); err != nil {
 		log.Printf("HIST DUMP: Ошибка перезаписи файла истории JSON: %v\n", err)
 		return err
 

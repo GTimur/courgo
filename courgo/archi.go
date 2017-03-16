@@ -184,11 +184,17 @@ func unArc(file string, dstpath string) error {
 		return errors.New("UnArc: путь \"" + dstpath + "\" не существует.")
 	}
 
-	commandString := fmt.Sprintf(`unrar e %s %s`, file, dstpath)
+	archiver := "unrar.exe"
+
+	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ARJ") {
+		archiver = "arj.exe"
+	}
+
+	commandString := fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
 	commandSlice := strings.Fields(commandString)
 	c := exec.Command(commandSlice[0], commandSlice[1:]...)
 	if err := c.Run(); err != nil {
-		fmt.Println("Ошибка запуска unrar.exe: ", err)
+		fmt.Println("Ошибка запуска " + archiver + ": ", err)
 		return err
 	}
 	return nil

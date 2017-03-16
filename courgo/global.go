@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	Version = "0.3.1"
+	Version = "0.3.7"
 	BannerString = "Courier Go notification utility. " + Version + " (C) 2017 UMK BANK (GTG)" + "\n" +
-		"USE: courgo.exe [start]"
-
+		"USAGE: courgo.exe [start]\n"
+	// Наименование файла конфигурации
 	configFile = "config.json"
 )
 
@@ -22,6 +22,13 @@ func InitGlobal() error {
 	if err := GlobalConfig.ReadJSON(); err != nil {
 		fmt.Println("Configuration file " + configFile + " not found. Creating config from template.\nPlease visit " + "http://127.0.0.1:8000/config")
 	}
+	/* Проверка данных конфигурационного файла на ошибки */
+	if err := GlobalConfig.SelfChek(); err != nil {
+		fmt.Println("Configuration file " + configFile + " has errors.")
+		fmt.Println(err)
+		return err
+	}
+
 	/* Если конфига нет, создаем базовый */
 	GlobalConfig.SetJSONFile("config.json")
 	if len(GlobalConfig.managerSrv.Addr) == 0 {
@@ -53,6 +60,7 @@ func InitGlobal() error {
 	/* История работы монитора */
 	GlobalHist.SetFilename("history.dat")
 	GlobalHist.SetJSONFile("history.json")
+	fmt.Println("Loading history.json...")
 	if err := ReadJSONFile(&GlobalHist); err != nil {
 		fmt.Println("History: history.json not found and will be created.")
 		if err := GlobalHist.MakeJSONFile(); err != nil {
@@ -61,12 +69,11 @@ func InitGlobal() error {
 	} else {
 		fmt.Println("History: cleaning history file until today.")
 		t := time.Now()
-		t.Add(-24*time.Hour)
+		t.Add(-12 * time.Hour)
 		GlobalHist.CleanUntilDay(t)
-		if err := GlobalHist.RewriteJSONFile(); err != nil {
+		if err := GlobalHist.RewriteJSON(); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

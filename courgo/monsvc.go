@@ -22,6 +22,7 @@ import (
 	"time"
 	"io/ioutil"
 	"fmt"
+	"strings"
 )
 
 // Переменная определяющая состояние обработчика правил монитора.
@@ -30,6 +31,7 @@ var MonSvcState bool
 // Запускает выполнение правил монитора по всему списку
 // если state = false, тогда обработка не выполняется
 func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, state bool) error {
+	evts := len(GlobalHist.Events)
 	// Проверим состояние выключателя обработки (до начала работы)
 	if !state {
 		return nil
@@ -37,7 +39,7 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, 
 	for _, r := range rules.collection {
 		now := time.Now()
 		// Временно пусть это тут побудет (сдвиг на 3 часа)
-		now = now.Add(-3 * time.Hour)
+		now = now.Add(-2 * time.Hour)
 		// Проверим настал ли новый день для регистрации событий
 		if GlobalHist.IsNewDay(now) {
 			// Запишем все назаписанные события на диск
@@ -60,6 +62,14 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, 
 				//fmt.Println("StartMonitor:", err)
 			}
 		}
+	}
+	// Если Количество событий изменилось - сохраним на диск (JSON)
+	if evts == len(GlobalHist.Events) {
+		return nil
+	}
+	// Запишем все назаписанные события на диск
+	if err := GlobalHist.RewriteJSON(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -94,13 +104,14 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 	//Поиск файлов согласно масок, указнных в правиле монитора
 	files := findFiles(rule.folder, rule.mask)
 	if len(files) == 0 {
-		return errors.New("Поиск файлов: Файлы указанные в правиле не найдены")
+		return errors.New("Поиск файлов: Файлы указанные в правиле не найдены. " + fmt.Sprintf("%s", rule.mask))
 	}
-	// fmt.Println(files, rule.mask)
+
+	//fmt.Println(files, rule.mask)
 	// fmt.Println(uid)
 
 	// Создадим временную директорию для различных нужд
-	dir, err := ioutil.TempDir(GlobalArchi.tmp, "monsvc")
+	dir, err := ioutil.TempDir(GlobalConfig.tmpDir, "monsvc")
 	if err != nil {
 		return err
 	}
@@ -153,9 +164,14 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			for name, mask := range files {
 				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 			}
-			fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
+			fmt.Println("Completed: RULE ", rule.id, " FILES:", files, time.Now().Format("02/01/2006 15:04:05"))
 			// Записываем имеющуюся несохранненную историю на диск
-			GlobalHist.Write()
+			if err := GlobalHist.Write(); err != nil {
+				return err
+			}
+			if err := GlobalHist.RewriteJSON(); err != nil {
+				return err
+			}
 		} /* if code.id == 10 */
 
 		if code.id == 11 {
@@ -178,12 +194,13 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
 			// Добавим всех получателей правила, для
 			// которых нашлись записи в адресной книге в получатели сообщений
+			msg.Body += "<br>Направлено:<br>"
 			for k := range uid {
 				if !uid[k] {
 					continue
 				}
 				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
-				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				msg.Body += GlobalBook.account[GlobalBook.indexByID(k)].name + "<br>"
 				//Уберем повторения адресов если таковые случатся
 				msg.To = Dedup(msg.To)
 			}
@@ -217,14 +234,20 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 					}
 					delete(msg.Attachments, filepath.Base(name))
 				}
-				// Добавим в историю события об обработке для каждого файла
+				// Добавим в историю событие об обработке самого архива
 				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, file, msg.To)
+				// Добавим в историю события об обработке для каждого файла
 				for name, mask := range funarc {
 					GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 				}
-				fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
+				fmt.Println("Completed: RULE ", rule.id, " FILES:", files, time.Now().Format("02/01/2006 15:04:05"))
 				// Записываем имеющуюся несохранненную историю на диск
-				GlobalHist.Write()
+				if err := GlobalHist.Write(); err != nil {
+					return err
+				}
+				if err := GlobalHist.RewriteJSON(); err != nil {
+					return err
+				}
 			}
 		} /* if code.id == 11 */
 
@@ -269,9 +292,14 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			for name, mask := range files {
 				GlobalHist.AddEvt(time.Now(), rule.id, code.id, mask, true, name, msg.To)
 			}
-			fmt.Println("Completed: RULE ", rule.id, " FILES:", files)
+			fmt.Println("Completed: RULE ", rule.id, " FILES:", files, time.Now().Format("02/01/2006 15:04:05"))
 			// Записываем имеющуюся несохранненную историю на диск
-			GlobalHist.Write()
+			if err := GlobalHist.Write(); err != nil {
+				return err
+			}
+			if err := GlobalHist.RewriteJSON(); err != nil {
+				return err
+			}
 		} /* if code.id == 20 */
 
 
@@ -297,7 +325,18 @@ func findFiles(dir string, mask []string) (files map[string]string) {
 	files = make(map[string]string)
 
 	for i := range mask {
-		list, err = filepath.Glob(dir + "/" + mask[i])
+		list, err = filepath.Glob(dir + "\\" + strings.ToUpper(mask[i]))
+		if err != nil {
+			log.Println("findFiles error: ", err)
+			return nil
+		}
+		//files = append(files, list...)
+		for _, f := range list {
+			files[f] = mask[i]
+		}
+	}
+	for i := range mask {
+		list, err = filepath.Glob(dir + "\\" + strings.ToLower(mask[i]))
 		if err != nil {
 			log.Println("findFiles error: ", err)
 			return nil

@@ -1,6 +1,6 @@
 {
 	"JSONFile": "config.json",
-	"TempDir": "Y:\\temp\\tmp2",
+	"TempDir": "C:\\TMP",
 	"ManagerSrv": {
 		"Addr": "127.0.0.1",
 		"Port": 8000
@@ -9,10 +9,9 @@
 		"Addr": "10.20.20.6",
 		"Port": 25,
 		"Account": "noti@ymkbank.ru",
-		"Password": "66*136*99*138*",
+		"Password": "116*140*126*149*2*206*173*87*",
 		"From": "noti@ymkbank.ru",
 		"FromName": "Информер GO",
 		"UseTLS": false
 	}
 }
-

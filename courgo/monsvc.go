@@ -146,12 +146,13 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			}
 			//добавим всех получателей правила, для
 			//которых нашлись записи в адресной книге в получатели сообщений
+			msg.Body += "<br><br>Направлено:<br>"
 			for k := range uid {
 				if !uid[k] {
 					continue
 				}
 				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
-				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				msg.Body += GlobalBook.account[GlobalBook.indexByID(k)].name + "<br>"
 				//Уберем повторения адресов если таковые случатся
 				msg.To = Dedup(msg.To)
 			}
@@ -194,7 +195,7 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 			msg := NewHTMLMessage(rule.msgSubject, rule.msgBody)
 			// Добавим всех получателей правила, для
 			// которых нашлись записи в адресной книге в получатели сообщений
-			msg.Body += "<br>Направлено:<br>"
+			msg.Body += "<br><br>Направлено:<br>"
 			for k := range uid {
 				if !uid[k] {
 					continue
@@ -273,12 +274,13 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 
 			//добавим всех получателей правила, для
 			//которых нашлись записи в адресной книге в получатели сообщений
+			msg.Body += "<br><br>Направлено:<br>"
 			for k := range uid {
 				if !uid[k] {
 					continue
 				}
 				msg.To = append(msg.To, GlobalBook.account[GlobalBook.indexByID(k)].mail...)
-				msg.Body += "<br>Письмо для " + GlobalBook.account[GlobalBook.indexByID(k)].name
+				msg.Body += GlobalBook.account[GlobalBook.indexByID(k)].name + "<br>"
 				//Уберем повторения адресов если таковые случатся
 				msg.To = Dedup(msg.To)
 			}

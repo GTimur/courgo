@@ -77,12 +77,12 @@ func main() {
 			continue
 		}
 		h = 0
-		if err := courgo.GlobalHist.RewriteDumpJSON(); err != nil {
+		if err := courgo.GlobalHist.RewriteJSON(); err != nil {
 			fmt.Println("Ошибка сохранения системной (JSON) истории:", err)
 		}
 	}
 	// Сохраняем системную(JSON) историю в случае штатного завершения программы
-	if err := courgo.GlobalHist.RewriteDumpJSON(); err != nil {
+	if err := courgo.GlobalHist.RewriteJSON(); err != nil {
 		fmt.Println("Ошибка сохранения системной (JSON) истории:", err)
 	}
 	ticker.Stop()

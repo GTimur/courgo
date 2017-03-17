@@ -82,18 +82,6 @@ func (h *Hist) TruncJSONFile() (err error) {
 	return err
 }
 
-// Создает новый файл для записи файла истории JSON
-func (h *Hist) RewriteJSON() (err error) {
-	if err := h.TruncJSONFile(); err != nil {
-		return err
-	}
-	if err := WriteJSONFile(h); err != nil {
-		return err
-	}
-	return err
-}
-
-
 
 //Создает новый файл для записи файла истории
 //если таковой отсутствует (не перезаписывает его)
@@ -163,9 +151,10 @@ func (h *Hist) Write() (err error) {
 		log.Printf("Ошибка записи файла истории: %v\n", err)
 		return err
 	}
-	var hst []string
+	//var hst []string
 	var line string
-	var idx []int
+	//var idx []int
+	var werr error
 	for i, evt := range h.Events {
 		if evt.IsWritten {
 			continue
@@ -181,22 +170,33 @@ func (h *Hist) Write() (err error) {
 			evt.Mask + "\t" +
 			evt.File + "\t" +
 			strings.Join(evt.Rcpt, ",") + "\r\n"
-		hst = append(hst, line)
+		//hst = append(hst, line)
+		h.Events[i].IsWritten = true
+		_, werr = file.WriteString(line)
+		if werr != nil {
+			log.Printf("HIST: Ошибка записи файла истории: %v\n", werr)
+			h.Events[i].IsWritten = false
+			return werr
+		}
+
 		// Соберем индексы событий
 		// для разметки признака isWritten
-		idx = append(idx, i)
+		//idx = append(idx, i)
 	}
+	/*
 	if len(hst) == 0 {
 		return err
 	}
+
 	for i, ln := range hst {
-		_, err := file.WriteString(ln)
-		if err != nil {
-			log.Printf("HIST: Ошибка записи файла истории: %v\n", err)
-			return err
+		_, werr = file.WriteString(ln)
+		if werr != nil {
+			log.Printf("HIST: Ошибка записи файла истории: %v\n", werr)
+			return werr
 		}
 		h.Events[i].IsWritten = true
 	}
+	*/
 	return err
 }
 
@@ -289,19 +289,20 @@ func (h *Hist) IsNewDay(Day time.Time) bool {
 	return true
 }
 
-func (h *Hist) RewriteDumpJSON() error {
+
+// Создает новый файл для записи файла истории JSON
+func (h *Hist) RewriteJSON() (err error) {
 	/* фиксируем изменения так же в файле истории JSON */
 	if len(h.Events) == 0 {
 		return nil
 	}
-	if err := GlobalHist.RewriteJSON(); err != nil {
+	if err := h.TruncJSONFile(); err != nil {
 		log.Printf("HIST DUMP: Ошибка перезаписи файла истории JSON: %v\n", err)
 		return err
-
 	}
 	if err := WriteJSONFile(h); err != nil {
 		log.Printf("HIST DUMP: Ошибка записи файла истории JSON: %v\n", err)
 		return err
 	}
-	return nil
+	return err
 }

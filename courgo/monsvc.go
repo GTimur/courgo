@@ -39,7 +39,7 @@ func StartMonitor(rules MonitorCol, accbook AddressBook, auth EmailCredentials, 
 	for _, r := range rules.collection {
 		now := time.Now()
 		// Временно пусть это тут побудет (сдвиг на 3 часа)
-		now = now.Add(-2 * time.Hour)
+		now = now.Add(-3 * time.Hour)
 		// Проверим настал ли новый день для регистрации событий
 		if GlobalHist.IsNewDay(now) {
 			// Запишем все назаписанные события на диск
@@ -301,8 +301,6 @@ func runRule(rule Monitor, accbook AddressBook, auth EmailCredentials) error {
 				return err
 			}
 		} /* if code.id == 20 */
-
-
 		if code.id == 1000 {
 			fmt.Println("Completed: RULE ", rule.id)
 		} /* if code.id == 1000 */

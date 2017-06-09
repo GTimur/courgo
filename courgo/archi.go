@@ -193,13 +193,13 @@ func unArc(file string, dstpath string) error {
 
 	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ZIP") {
 		archiver = "unzip.exe"
-		commandString = fmt.Sprintf(archiver + ` -x %s %s`, file, dstpath)
+		commandString = fmt.Sprintf(archiver + ` -x %s -d %s`, file, dstpath)
 	}
 
 	commandSlice := strings.Fields(commandString)
 	c := exec.Command(commandSlice[0], commandSlice[1:]...)
 	if err := c.Run(); err != nil {
-		fmt.Println("Ошибка запуска " + archiver + ": ", err)
+		fmt.Println("Ошибка запуска " + archiver + "для файла "+ file +": ", err)
 		return err
 	}
 	return nil

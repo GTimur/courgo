@@ -185,12 +185,17 @@ func unArc(file string, dstpath string) error {
 	}
 
 	archiver := "unrar.exe"
+	commandString := fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
 
 	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ARJ") {
 		archiver = "arj.exe"
 	}
 
-	commandString := fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
+	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ZIP") {
+		archiver = "unzip.exe"
+		commandString = fmt.Sprintf(archiver + ` -x %s %s`, file, dstpath)
+	}
+
 	commandSlice := strings.Fields(commandString)
 	c := exec.Command(commandSlice[0], commandSlice[1:]...)
 	if err := c.Run(); err != nil {

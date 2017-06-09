@@ -261,6 +261,7 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 			break
 		}
 	}
+
 	return nil
 }
 

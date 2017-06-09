@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	Version = "0.3.9"
+	Version = "0.4.2"
 	BannerString = "Courier Go notification utility. " + Version + " (C) 2017 UMK BANK (GTG)" + "\n" +
-		"USAGE: courgo.exe [start]\n"
+		"USAGE: courgo.exe [start]\n"+
+		"If \"start\" option is set - monitor process starts immediately.\n"
 	// Наименование файла конфигурации
 	configFile = "config.json"
 )
@@ -69,7 +70,7 @@ func InitGlobal() error {
 	} else {
 		fmt.Println("History: cleaning history file until today.")
 		t := time.Now()
-		t.Add(-12 * time.Hour)
+		t = t.Add(-12 * time.Hour)
 		GlobalHist.CleanUntilDay(t)
 		if err := GlobalHist.RewriteJSON(); err != nil {
 			return err

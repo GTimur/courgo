@@ -1,4 +1,4 @@
-# courgo (0.3.9)
+# courgo
 Courier Go is a file monitor with notification functionality.
 
 # What does it do?

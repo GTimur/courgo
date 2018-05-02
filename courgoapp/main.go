@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Gtimur/courgo"
+	"github.com/Gtimur/courgo/courgo"
 	"net"
 	"os"
 	"log"
@@ -15,7 +15,7 @@ import (
 
 func main() {
 	var web courgo.WebCtl
-
+        courgo.MonSvcDebug = true
 	/* Приветствие */
 	fmt.Println(courgo.BannerString)
 	if err := courgo.InitGlobal(); err != nil {

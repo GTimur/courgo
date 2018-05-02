@@ -14,8 +14,9 @@
 package courgo
 
 import (
-	"time"
+	"fmt"
 	"os"
+	"time"
 	"log"
 	"strconv"
 	"strings"
@@ -280,13 +281,22 @@ func (h *Hist) CleanAll() error {
 // Если последнее событие было до начала текущего дня - новый день настал.
 func (h *Hist) IsNewDay(Day time.Time) bool {
 	if len(h.Events) == 0 {
+		if MonSvcDebug {
+			fmt.Println("DEBUG: IsNewDay: нет данных для обработки в h.Events")
+                }
 		return false // нет данных для обработки
 	}
 	// Последнее событие датировано не раньше начала текущего дня
 	if !h.Events[len(h.Events) - 1].Date.Before(Day) {
+		if MonSvcDebug {
+			fmt.Println("DEBUG: IsNewDay: последнее событие в h.Events датировано позже начала текущего дня: "+h.Events[len(h.Events) - 1].Date.Format("2006-01-02 15:04:05"))
+                }
 		return false
 	}
 	// Последнее событие датировано РАНЬШЕ начала текущего дня
+	if MonSvcDebug {
+		fmt.Println("DEBUG: IsNewDay: Последнее событие h.Events датировано РАНЬШЕ начала текущего дня: "+h.Events[len(h.Events) - 1].Date.Format("2006-01-02 15:04:05"))
+        }
 	return true
 }
 
@@ -295,6 +305,9 @@ func (h *Hist) IsNewDay(Day time.Time) bool {
 func (h *Hist) RewriteJSON() (err error) {
 	/* фиксируем изменения так же в файле истории JSON */
 	if len(h.Events) == 0 {
+	if MonSvcDebug {
+		fmt.Println("DEBUG: RewriteJSON: нет событий в памяти для записи в файл истории.")
+        }
 		return nil
 	}
 	if err := h.TruncJSONFile(); err != nil {
@@ -304,6 +317,9 @@ func (h *Hist) RewriteJSON() (err error) {
 	if err := WriteJSONFile(h); err != nil {
 		log.Printf("HIST DUMP: Ошибка записи файла истории JSON: %v\n", err)
 		return err
-	}
+	}	
+	if MonSvcDebug {
+		fmt.Println("DEBUG: RewriteJSON: успешно выполнен.")
+        }
 	return err
 }

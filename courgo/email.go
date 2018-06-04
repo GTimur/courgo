@@ -12,7 +12,7 @@ import (
 	"bytes"
 	"time"
 	"strings"
-	"net/smtp"
+        "github.com/Gtimur/courgo/smtp"
 	"log"
 	"crypto/tls"
 	"strconv"

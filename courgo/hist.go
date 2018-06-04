@@ -226,40 +226,34 @@ func BeginOfDay(t time.Time) time.Time {
 
 // Удаляет всю историю из памяти до 0 часов указаннго дня Day.
 func (h *Hist) CleanUntilDay(Day time.Time) error {
-	complete := false
+	complete := false        
 
 	// Проверим есть ли подходящие события для обработки
 	for _, evt := range h.Events {
 		if !evt.Date.Before(BeginOfDay(Day)) {
 			continue
 		}		
-		complete = true                
+		complete = true
 	}
 	if !complete {
+        fmt.Println("CLEANER !complete events:",h.Events)
 		return nil
 	}
 
-
 	// Очищаем историю
 	complete = false
+	found := true
 	for !complete {
-
-		// Проверим есть ли подходящие события для обработки
-                found := false
-		for _, evt := range h.Events {
-			if !evt.Date.Before(BeginOfDay(Day)) {
-				continue
-			}
-			found = true
-		}
 		if !found {
+			fmt.Println("CLEANER !found events:",h.Events)
 			break
 		}
-
+		found = false
 		for i, evt := range h.Events {
 			if !evt.Date.Before(BeginOfDay(Day)) {				
 				continue
 			}
+			found = true
 			// Удалим событие из списка если его дата меньше указанной
 			if len(h.Events) == 0 {
 				complete = true
@@ -275,7 +269,7 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 			break
 		}
 	}
-
+        fmt.Println("CLEANER events:",h.Events)
 	return nil
 }
 

@@ -5,9 +5,9 @@
 package courgo
 
 import (
-	"net/smtp"
 	"log"
 	"net/mail"
+        "github.com/Gtimur/courgo/smtp"
 )
 
 //Структура учетных данных sendmail

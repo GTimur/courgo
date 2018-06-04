@@ -245,13 +245,14 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 	for !complete {
 
 		// Проверим есть ли подходящие события для обработки
+                found := false
 		for _, evt := range h.Events {
 			if !evt.Date.Before(BeginOfDay(Day)) {
 				continue
 			}
-			complete = true
+			found = true
 		}
-		if !complete {
+		if !found {
 			break
 		}
 

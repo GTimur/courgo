@@ -236,7 +236,9 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 		complete = true
 	}
 	if !complete {
-        fmt.Println("CLEANER !complete events:",h.Events)
+		if MonSvcDebug {
+        	fmt.Println("CLEANER !complete events:",h.Events)
+		}
 		return nil
 	}
 
@@ -245,7 +247,9 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 	found := true
 	for !complete {
 		if !found {
-			fmt.Println("CLEANER !found events:",h.Events)
+			   if MonSvcDebug {
+        		   fmt.Println("CLEANER !found events:",h.Events)
+			  }
 			break
 		}
 		found = false
@@ -269,7 +273,9 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 			break
 		}
 	}
-        fmt.Println("CLEANER events:",h.Events)
+        if MonSvcDebug {
+			fmt.Println("CLEANER events:",h.Events)
+		       }
 	return nil
 }
 

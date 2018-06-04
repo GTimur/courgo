@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Version = "0.4.5"
+	Version = "0.4.6"
 	BannerString = "Courier Go notification utility. " + Version + " (C) 2018 UMK BANK (GTG)" + "\n" +
 		"USAGE: courgo.exe [start]\n"+
 		"If \"start\" option is set - monitor process starts immediately.\n"

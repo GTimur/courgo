@@ -232,19 +232,31 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 	for _, evt := range h.Events {
 		if !evt.Date.Before(BeginOfDay(Day)) {
 			continue
-		}
-		complete = true
+		}		
+		complete = true                
 	}
 	if !complete {
 		return nil
 	}
 
+
 	// Очищаем историю
 	complete = false
 	for !complete {
-		for i, evt := range h.Events {
-			//fmt.Println(len(h.Events), i)
+
+		// Проверим есть ли подходящие события для обработки
+		for _, evt := range h.Events {
 			if !evt.Date.Before(BeginOfDay(Day)) {
+				continue
+			}
+			complete = true
+		}
+		if !complete {
+			break
+		}
+
+		for i, evt := range h.Events {
+			if !evt.Date.Before(BeginOfDay(Day)) {				
 				continue
 			}
 			// Удалим событие из списка если его дата меньше указанной
@@ -258,7 +270,7 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 				complete = true
 				continue
 			}
-			h.Events = append(h.Events[:i], h.Events[i + 1:]...)
+			h.Events = append(h.Events[:i], h.Events[i + 1:]...)			
 			break
 		}
 	}

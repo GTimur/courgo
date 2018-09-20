@@ -1,21 +1,22 @@
 package main
 
 import (
+	"courgo/pkg/courgo"
 	"fmt"
-	"github.com/Gtimur/courgo/courgo"
+	"log"
 	"net"
 	"os"
-	"log"
-	"strconv"
-	"time"
-	"github.com/GeertJohan/go.rice"
-	"strings"
 	"os/signal"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/GeertJohan/go.rice"
 )
 
 func main() {
 	var web courgo.WebCtl
-        courgo.MonSvcDebug = true
+	courgo.MonSvcDebug = true
 	/* Приветствие */
 	fmt.Println(courgo.BannerString)
 	if err := courgo.InitGlobal(); err != nil {
@@ -52,8 +53,8 @@ func main() {
 		courgo.MonSvcState = strings.Contains(os.Args[1], "start")
 	}
 	ticker := time.NewTicker(time.Second * 1)
-	i := 0; // таймер интервала выполнения правил монитора
-	h := 0; // таймер интервала сохранения аварийной истории (JSON)
+	i := 0 // таймер интервала выполнения правил монитора
+	h := 0 // таймер интервала сохранения аварийной истории (JSON)
 
 	for range ticker.C {
 		// Запускаем обработчик каждую минуту

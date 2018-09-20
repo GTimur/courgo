@@ -3,19 +3,19 @@
 package courgo
 
 import (
+	"bytes"
+	"courgo/pkg/smtp"
+	"crypto/tls"
+	"encoding/base64"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"mime"
 	"net/mail"
 	"path/filepath"
-	"io/ioutil"
-	"fmt"
-	"mime"
-	"encoding/base64"
-	"bytes"
-	"time"
-	"strings"
-        "github.com/Gtimur/courgo/smtp"
-	"log"
-	"crypto/tls"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // Attachment represents an email attachment.
@@ -118,7 +118,7 @@ func (m *Message) Bytes() []byte {
 
 	buf.WriteString("MIME-Version: 1.0\r\n")
 
-	boundary := "8e1f7336599caf92131b646ea6b8f5b9"  //разделитель вложений в письме (может быть любой, я использовал md5)
+	boundary := "8e1f7336599caf92131b646ea6b8f5b9" //разделитель вложений в письме (может быть любой, я использовал md5)
 
 	if len(m.Attachments) > 0 {
 		buf.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\r\n")
@@ -152,7 +152,7 @@ func (m *Message) Bytes() []byte {
 					buf.WriteString("\tname=\"" + attachment.Filename + "\"\r\n")
 				}
 				buf.WriteString("Content-Transfer-Encoding: base64\r\n")
-				buf.WriteString("Content-Disposition: attachment;\r\n\tfilename=\""+attachment.Filename+"\"\r\n\r\n")
+				buf.WriteString("Content-Disposition: attachment;\r\n\tfilename=\"" + attachment.Filename + "\"\r\n\r\n")
 
 				//buf.WriteString("Content-Disposition: attachment;\r\nfilename=\"=?UTF-8?B?")
 				//buf.WriteString(coder.EncodeToString([]byte(attachment.Filename)))
@@ -164,7 +164,7 @@ func (m *Message) Bytes() []byte {
 				// write base64 content in lines of up to 76 chars
 				for i, l := 0, len(b); i < l; i++ {
 					buf.WriteByte(b[i])
-					if (i + 1) % 76 == 0 {
+					if (i+1)%76 == 0 {
 						buf.WriteString("\r\n")
 					}
 				}
@@ -204,7 +204,7 @@ func SendMailSSL(addr string, port uint, auth smtp.Auth, m *Message) error {
 }
 
 /*Реализация аналога smtp.SendMail для работы с SSL (yandex, google smtp)*/
-func SendMailTLS(host string, port uint, auth smtp.Auth, from string,to []string, msg []byte) (err error) {
+func SendMailTLS(host string, port uint, auth smtp.Auth, from string, to []string, msg []byte) (err error) {
 	serverAddr := fmt.Sprintf("%s:%d", host, port)
 
 	conn, err := tls.Dial("tcp", serverAddr, nil)

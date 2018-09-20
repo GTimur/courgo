@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	Version = "0.4.6"
+	Version      = "0.4.7"
 	BannerString = "Courier Go notification utility. " + Version + " (C) 2018 UMK BANK (GTG)" + "\n" +
-		"USAGE: courgo.exe [start]\n"+
+		"USAGE: courgo.exe [start]\n" +
 		"If \"start\" option is set - monitor process starts immediately.\n"
 	// Наименование файла конфигурации
 	configFile = "config.json"
@@ -62,31 +62,31 @@ func InitGlobal() error {
 	GlobalHist.SetFilename("history.dat")
 	GlobalHist.SetJSONFile("history.json")
 	fmt.Println("Loading history.json...")
-       	if MonSvcDebug {
-		fmt.Printf("DEBUG: GlobalHist: история содержит %d событий.\n",len(GlobalHist.Events))
-        }
+	if MonSvcDebug {
+		fmt.Printf("DEBUG: GlobalHist: история содержит %d событий.\n", len(GlobalHist.Events))
+	}
 	if err := ReadJSONFile(&GlobalHist); err != nil {
 		fmt.Println("History: history.json not found and will be created.")
 		if err := GlobalHist.MakeJSONFile(); err != nil {
 			return err
 		}
 	} else {
-            	if MonSvcDebug {
-			fmt.Printf("DEBUG: GlobalHist после загрузки: история содержит %d событий.\n",len(GlobalHist.Events))
-                }
+		if MonSvcDebug {
+			fmt.Printf("DEBUG: GlobalHist после загрузки: история содержит %d событий.\n", len(GlobalHist.Events))
+		}
 		fmt.Println("History: cleaning history file until today.")
 		t := time.Now()
 		t = t.Add(-12 * time.Hour)
 		GlobalHist.CleanUntilDay(t)
-            	if MonSvcDebug {
-			fmt.Printf("DEBUG: GlobalHist после очистки: история содержит %d событий.\n",len(GlobalHist.Events))
-                }
-            	if MonSvcDebug {
-			fmt.Printf("DEBUG: Файл %s будет перезаписан.\n",GlobalHist.JSONfile)
-                }
+		if MonSvcDebug {
+			fmt.Printf("DEBUG: GlobalHist после очистки: история содержит %d событий.\n", len(GlobalHist.Events))
+		}
+		if MonSvcDebug {
+			fmt.Printf("DEBUG: Файл %s будет перезаписан.\n", GlobalHist.JSONfile)
+		}
 
 		if err := GlobalHist.RewriteJSON(); err != nil {
-                        fmt.Printf("History: file rewrite error: %v",err)
+			fmt.Printf("History: file rewrite error: %v", err)
 			return err
 		}
 

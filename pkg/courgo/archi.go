@@ -6,16 +6,16 @@
 package courgo
 
 import (
-	"time"
-	"strconv"
-	"fmt"
-	"os"
-	"log"
-	"path/filepath"
-	"io"
 	"errors"
-	"strings"
+	"fmt"
+	"io"
+	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Глобальная переменная для обслуживания архиватора
@@ -24,10 +24,10 @@ var GlobalArchi Archi
 type Archi struct {
 	date time.Time
 	/* Пути */
-	src  string
-	dst  string
+	src string
+	dst string
 	// Каталог для хранения временных файлов
-	tmp  string
+	tmp string
 }
 
 func (a *Archi) SetDate(date time.Time) {
@@ -52,18 +52,18 @@ func (a *Archi) SetTmp(tmp string) {
 
 // Возвращает директорию вида ГГГГ\ММ\ДД с учетом даты.
 func ArcDir(date time.Time) string {
-	res := strconv.Itoa(date.Year()) //ГГГГ
+	res := strconv.Itoa(date.Year())                     //ГГГГ
 	res += "\\" + fmt.Sprintf("%02d", int(date.Month())) //ММ
-	res += "\\" + fmt.Sprintf("%02d", date.Day()) //ДД
+	res += "\\" + fmt.Sprintf("%02d", date.Day())        //ДД
 	return res
 }
 
 // Возвращает директорию вида ГГГГ\ММ\ДД с учетом даты.
 func (a *Archi) ArcDirDstNow() string {
 	date := time.Now()
-	res := strconv.Itoa(date.Year()) //ГГГГ
+	res := strconv.Itoa(date.Year())                     //ГГГГ
 	res += "\\" + fmt.Sprintf("%02d", int(date.Month())) //ММ
-	res += "\\" + fmt.Sprintf("%02d", date.Day()) //ДД
+	res += "\\" + fmt.Sprintf("%02d", date.Day())        //ДД
 	return a.dst + "\\" + res
 }
 
@@ -130,7 +130,6 @@ func (a *Archi) FullCopy() error {
 	return nil
 }
 
-
 // Копирует указанный файл в архивную директорию
 // src,dst = полный путь включая имя файла
 func MakeCopy(dst string, src string) error {
@@ -166,13 +165,12 @@ func MakeCopyAll(dst string, src string) error {
 	files := findFiles(src, mask)
 	// Копируем каждый файл в папку назначения dst
 	for f := range files {
-		if err := MakeCopy(dst + "\\" + filepath.Base(f), f); err != nil {
+		if err := MakeCopy(dst+"\\"+filepath.Base(f), f); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-
 
 // Разархивирует архивные файлы при помощи unrar.exe
 // destpath = путь к папке для разархивации
@@ -185,23 +183,29 @@ func unArc(file string, dstpath string) error {
 	}
 
 	archiver := "unrar.exe"
-	commandString := fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
+	commandString := fmt.Sprintf(archiver+` e -ep1 %s %s`, file, dstpath)
+	//commandString := fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
 
 	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ARJ") {
 		archiver = "arj.exe"
-		commandString = fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
+		commandString = fmt.Sprintf(archiver+` e -p1 %s %s`, file, dstpath)
+		//commandString = fmt.Sprintf(archiver + ` e %s %s`, file, dstpath)
 	}
 
 	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".ZIP") {
 		archiver = "unzip.exe"
-		commandString = fmt.Sprintf(archiver + ` -x %s -d %s`, file, dstpath)
+		commandString = fmt.Sprintf(archiver+` -j %s -d %s`, file, dstpath)
+		//commandString = fmt.Sprintf(archiver + ` -x %s -d %s`, file, dstpath)
 	}
 
 	commandSlice := strings.Fields(commandString)
+	fmt.Println(commandString)
 	c := exec.Command(commandSlice[0], commandSlice[1:]...)
 	if err := c.Run(); err != nil {
-		fmt.Println("Ошибка запуска " + archiver + " для файла "+ file +": ", err)
-		return err
+		fmt.Printf("Запуск %s для файла %s: %v\n", archiver, file, err)
+		if strings.Contains(strings.ToUpper(err.Error()), "EXIT STATUS 2") {
+			return err
+		}
 	}
 	return nil
 }

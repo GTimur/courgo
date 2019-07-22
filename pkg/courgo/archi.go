@@ -196,14 +196,14 @@ func unArc(file string, dstpath string) error {
 		//archiver = "unzip.exe"
 		//commandString = fmt.Sprintf(archiver+` -j %s -d %s`, file, dstpath)
 		archiver = "7z.exe"
-		commandString = fmt.Sprintf(archiver+` -o %s x %s`,dstpath, file)
+		commandString = fmt.Sprintf(archiver+` -o%s e %s`,dstpath, file)
 		////commandString = fmt.Sprintf(archiver + ` -x %s -d %s`, file, dstpath)
 	}
 	if strings.Contains(strings.ToUpper(filepath.Ext(file)), ".7Z") {
 		//archiver = "unzip.exe"
 		//commandString = fmt.Sprintf(archiver+` -j %s -d %s`, file, dstpath)
 		archiver = "7z.exe"
-		commandString = fmt.Sprintf(archiver+` -o %s x %s`,dstpath, file)
+		commandString = fmt.Sprintf(archiver+` -o%s e %s`,dstpath, file)
 		////commandString = fmt.Sprintf(archiver + ` -x %s -d %s`, file, dstpath)
 	}
 

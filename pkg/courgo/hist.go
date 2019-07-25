@@ -258,6 +258,9 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 				continue
 			}
 			found = true
+			if MonSvcDebug {
+				fmt.Println("DEBUG: CleanUntilDay: Есть что удалить:", h.Events[i],"всего есть событий len(h.Events) = ", len(h.Events))
+        	        }
 			// Удалим событие из списка если его дата меньше указанной
 			if len(h.Events) == 0 {
 				complete = true
@@ -265,7 +268,8 @@ func (h *Hist) CleanUntilDay(Day time.Time) error {
 				//return nil // нет данных для обработки
 			}
 			if len(h.Events) == 1 {
-				h.Events = h.Events[:len(h.Events) - 1]
+				//h.Events = h.Events[:len(h.Events) - 1]
+				h.Events = h.Events[:0]
 				complete = true
 				continue
 			}
